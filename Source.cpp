@@ -28,6 +28,18 @@ char path_key[255];
 std::string key; // Main key
 std::string bin_key; // Main key in binary
 
+std::string key56bit; // After PC1 key in binary
+std::string key48bit; // After PC2 Sub key in binary
+
+std::string C28; // "Left" part of key56bit
+std::string D28; // "Right" part of key56bit
+
+
+// All subkeys in one place
+std::string subkeys[16] = {
+	{},	{},	{},	{},	{},	{},	{},	{},	{},	{},	{},	{},	{},	{},	{},	{},
+};
+
 //========================================================
 //========================================================
 
@@ -78,12 +90,12 @@ void Key_generator(){
 		key += hex_numbers[dist6(rng)];
 	}
 
-	//std::cout << "Key is : " << key << std::endl;
+	std::cout << "Key is : " << key << std::endl;
 }
 
 
 // Converts HEX string to "0" and "1"
-void HEX2BIN(std::string str) {
+std::string HEX2BIN(std::string str) {
 
 	for (int i = 0; i < str.length(); i++)
 	{
@@ -143,7 +155,7 @@ void HEX2BIN(std::string str) {
 		}
 
 	}
-	std::cout << bin_key << std::endl;
+	return bin_key;
 }
 
 
@@ -226,6 +238,123 @@ void Key_Logic() {
 }
 
 
+// Permutated Choice 1 from 64 to 56 bits
+std::string PC_1(std::string Str64bit, std::string Str56bit) {
+
+	for (int i = 0; i < 64; i++)
+	{
+		if ((i + 1) % 8 == 0) {
+		}
+		else {
+			Str56bit += Str64bit[i];
+		}
+	}
+	std::cout << "Bin_key 56:" << Str56bit << std::endl;
+
+	return Str56bit;
+}
+
+
+// Permutated Choice 2 from 56 to 48 bits
+std::string PC_2(std::string Str56bit, std::string Str48bit) {
+
+	for (int i = 0; i < 56; i++)
+	{
+		if ((i+1)%8 == 0 || i == 0) {
+		}
+		else {
+			Str48bit += Str56bit[i];
+		}
+	}
+	std::cout << "key 48:" << Str48bit << std::endl;
+	return Str48bit;
+}
+
+
+// Divide key56bit on C-part and D-part
+void C_and_D_divider(std::string Str56bit) {
+
+	C28 = "";
+	D28 = "";
+
+	for (int i = 0; i < 56; i++) {
+		if (i < 28)
+		{
+			C28 += Str56bit[i];
+		}
+		else {
+			D28 += Str56bit[i];
+		}
+	}
+
+
+	std::cout << "C=" << C28 << std::endl;
+	std::cout << "D=" << D28 << std::endl;
+
+}
+
+
+// Left shift
+std::string LS(std::string StrToShift, int NumberOfKey) {
+
+	std::string str; // Temporary variable
+
+	if (NumberOfKey == 1 || NumberOfKey == 2 || NumberOfKey == 9 || NumberOfKey == 16) {
+		for (int i = 1; i < 28; i++)
+		{
+			str += StrToShift[i];
+		}
+		str += StrToShift[0];
+	}
+	else {
+		for (int i = 2; i < 28; i++)
+		{
+			str += StrToShift[i];
+		}
+		str += StrToShift[0];
+		str += StrToShift[1];
+	}
+	return str;
+}
+
+
+// Concatenate C-part and D-part
+std::string C_plus_D(std::string Cpart, std::string Dpart) {
+
+	key56bit = Cpart;
+	key56bit += Dpart;
+
+	std::cout << "united: " << key56bit << std::endl;
+
+	return key56bit;
+}
+
+
+// Keyschedule
+void Key_Schedule() {
+	HEX2BIN(key); // Now key is in BIN
+	key56bit = PC_1(bin_key, key56bit);
+
+
+
+	for (int i = 1; i <= 16; i++)
+	{
+		C_and_D_divider(key56bit);
+
+		C28 = LS(C28, i);
+
+		D28 = LS(D28, i);
+
+		key56bit = C_plus_D(C28, D28);
+
+		subkeys[i-1] = PC_2(key56bit, key48bit);
+
+		key48bit = "";
+	}
+	   	 
+}
+
+
 // Choose encryptioon or decryption
 void Hello() {
 
@@ -260,6 +389,8 @@ void Hello() {
 
 
 
+
+
 //========================================================
 //========================================================
 
@@ -277,6 +408,13 @@ int main() {
 	//Hello();
 
 	//Key_Logic();
+
+	//key = "F1FFFF3FFAFFF5FF"; // our test key
+
+	Key_generator();
+
+	Key_Schedule();
+
 
 	return 0;
 }
