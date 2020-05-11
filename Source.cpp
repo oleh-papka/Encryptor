@@ -181,52 +181,7 @@ void HEX2BIN(std::string str) {
 }
 
 
-// Converts DEC string to "0" and "1"
-void DEC2BIN(std::string str) {
-	for (int i = 0; i < str.length(); i++)
-	{
-		switch (str[i])
-		{
-		case '0':
-			bin_key += "0000";
-			break;
-		case '1':
-			bin_key += "0001";
-			break;
-		case '2':
-			bin_key += "0010";
-			break;
-		case '3':
-			bin_key += "0011";
-			break;
-		case '4':
-			bin_key += "0100";
-			break;
-		case '5':
-			bin_key += "0101";
-			break;
-		case '6':
-			bin_key += "0110";
-			break;
-		case '7':
-			bin_key += "0111";
-			break;
-		case '8':
-			bin_key += "1000";
-			break;
-		case '9':
-			bin_key += "1001";
-			break;
-
-		default:
-			break;
-		}
-	}
-	std::cout << bin_key << std::endl;
-}
-
-
-// asks for key where it or enter int if you have
+// Asks for key where it or enter int if you have
 void Key_entering() {
 	std::cout << "Is this a file (.txt) otherwise enter it.  [f] - for file, [e] - enter it" << std::endl;
 
@@ -303,7 +258,6 @@ void Key_Logic() {
 		Key_Logic();
 	}
 }
-
 
 
 
