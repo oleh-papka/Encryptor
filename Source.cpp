@@ -65,40 +65,6 @@ void Copy_in_BIN (){
 	Copyfile.close();
 }
 
-
-// Choose encryptioon or decryption
-void Hello() {
-
-	std::cout << "For encryption enter [e] , for decryption [d]"<< std::endl;
-	char answer;
-	std::cin >> answer; // Get the answer
-
-	if (answer == 'e') 
-	{
-		encryption_flag = 1;
-		std::cout << "ok, encryption" << std::endl;
-		Copy_in_BIN();	// Gets file and creates copy in .bin
-		Key_Logic(); // Gets the key
-	}
-	else if (answer == 'd')
-	{
-		decryption_flag = 1;
-		std::cout << "ok, decryption soon" << std::endl;
-	}
-	else if (answer == 'F')	// Easter egg (why not?)
-	{
-		std::cout << "Thanks, you paid respect" << std::endl;
-		Hello();
-	}
-	else
-	{
-		std::cout << "Sorry, but ->" << std::endl;
-		Hello();
-	}
-
-}
-
-
 // Random key generator (Generates 64-bit HEX key)
 void Key_generator(){
 
@@ -259,6 +225,38 @@ void Key_Logic() {
 	}
 }
 
+
+// Choose encryptioon or decryption
+void Hello() {
+
+	std::cout << "For encryption enter [e] , for decryption [d]"<< std::endl;
+	char answer;
+	std::cin >> answer; // Get the answer
+
+	if (answer == 'e') 
+	{
+		encryption_flag = 1;
+		std::cout << "ok, encryption" << std::endl;
+		Copy_in_BIN();	// Gets file and creates copy in .bin
+		Key_Logic(); // Gets the key
+	}
+	else if (answer == 'd')
+	{
+		decryption_flag = 1;
+		std::cout << "ok, decryption soon" << std::endl;
+	}
+	else if (answer == 'F')	// Easter egg (why not?)
+	{
+		std::cout << "Thanks, you paid respect" << std::endl;
+		Hello();
+	}
+	else
+	{
+		std::cout << "Sorry, but ->" << std::endl;
+		Hello();
+	}
+
+}
 
 
 
