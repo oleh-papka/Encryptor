@@ -21,10 +21,9 @@
 bool encryption_flag = 0;
 bool decryption_flag = 0;
 
-char answer;
-
 char path_PlainText[255];
 char path_Copy[255];
+char path_key[255];
 
 std::string key; // Main key
 std::string bin_key; // Main key in binary
@@ -71,7 +70,7 @@ void Copy_in_BIN (){
 void Hello() {
 
 	std::cout << "For encryption enter [e] , for decryption [d]"<< std::endl;
-	//answer = getchar();
+	char answer;
 	std::cin >> answer; // Get the answer
 
 	if (answer == 'e') 
@@ -79,15 +78,17 @@ void Hello() {
 		encryption_flag = 1;
 		std::cout << "ok, encryption" << std::endl;
 		Copy_in_BIN();	// Gets file and creates copy in .bin
+		Key_Logic(); // Gets the key
 	}
 	else if (answer == 'd')
 	{
 		decryption_flag = 1;
 		std::cout << "ok, decryption soon" << std::endl;
 	}
-	else if (answer == 'F')
+	else if (answer == 'F')	// Easter egg (why not?)
 	{
 		std::cout << "Thanks, you paid respect" << std::endl;
+		Hello();
 	}
 	else
 	{
@@ -111,7 +112,7 @@ void Key_generator(){
 		key += hex_numbers[dist6(rng)];
 	}
 
-	std::cout << "Key is : " << key << std::endl;
+	//std::cout << "Key is : " << key << std::endl;
 }
 
 
@@ -225,6 +226,88 @@ void DEC2BIN(std::string str) {
 }
 
 
+// asks for key where it or enter int if you have
+void Key_entering() {
+	std::cout << "Is this a file (.txt) otherwise enter it.  [f] - for file, [e] - enter it" << std::endl;
+
+	char ans;	// Does key in file or enter it
+	std::cin >> ans;
+	if (ans == 'f') {
+		std::cout << "Enter location of your file: ";
+		std::cin >> path_key;
+		std::cout << "Path to key " << path_key << std::endl;
+		std::cout << "Soon!" << std::endl;
+	}
+	else if (ans == 'e') {
+		std::cout << "Enter your key: ";
+		std::cin >> key;
+		std::cout << "Your key " << key << std::endl;
+		std::cout << "Soon!" << std::endl;
+	}
+	else {
+		std::cout << "Sorry, but ->" << std::endl;
+		Key_entering();
+	}
+}
+
+
+// Should we generate a key for you if you dont have it
+void Key_generating() {
+	char answer;
+
+	std::cout << "Should we generate it? [y] - for yes, [n] - for no" << std::endl;
+	std::cin >> answer; // Get the answer
+
+	if (answer == 'y') {
+		Key_generator();
+		std::cout << "Ok, we created a key for you:" << key << std::endl;
+	}
+	else if (answer == 'n')
+	{
+		std::string entered_key;
+		std::cout << "Then create it by yourself use HEX base \n\t (16 numbers only, other inputs will be ignored)" << std::endl;
+
+		while (entered_key.length() != 16 ) {
+			std::cout << "Enter your key use HEX base (16 numbers only): ";
+			std::cin >> entered_key;
+			std::cout << "Entered: " << entered_key << std::endl;
+		}
+
+		key = entered_key;
+		std::cout << "Your key is: " << key << std::endl;
+	}
+	else
+	{
+		std::cout << "Sorry, but ->" << std::endl;
+		Key_generating();
+	}
+}
+
+
+// Asking for key and what to do
+void Key_Logic() {
+
+	char answer;	// Does user have a key
+	
+	std::cout << "Do you have key? [y] - for yes, [n] - for no" << std::endl;
+	std::cin >> answer; // Get the answer
+
+	if (answer == 'y') {
+		Key_entering();
+	}
+	else if (answer == 'n') {
+		Key_generating();
+	}
+	else {
+		std::cout << "Sorry, but ->" << std::endl;
+		Key_Logic();
+	}
+}
+
+
+
+
+
 //========================================================
 //========================================================
 
@@ -240,11 +323,8 @@ int main() {
 	std::cout << "======= Hello! =======" << std::endl;
 	
 	//Hello();
-	
-	//Key_generator();
-	
-	//HEX2BIN(key);
 
+	//Key_Logic();
 
 	return 0;
 }
