@@ -34,11 +34,7 @@ std::string key48bit; // After PC2 Sub key in binary
 std::string C28; // "Left" part of key56bit
 std::string D28; // "Right" part of key56bit
 
-
-// All subkeys in one place
-std::string subkeys[16] = {
-	{},	{},	{},	{},	{},	{},	{},	{},	{},	{},	{},	{},	{},	{},	{},	{},
-};
+std::string subkeys[16]; // All subkeys in one place
 
 //========================================================
 //========================================================
@@ -249,7 +245,6 @@ std::string PC_1(std::string Str64bit, std::string Str56bit) {
 			Str56bit += Str64bit[i];
 		}
 	}
-	std::cout << "Bin_key 56:" << Str56bit << std::endl;
 
 	return Str56bit;
 }
@@ -266,7 +261,7 @@ std::string PC_2(std::string Str56bit, std::string Str48bit) {
 			Str48bit += Str56bit[i];
 		}
 	}
-	std::cout << "key 48:" << Str48bit << std::endl;
+
 	return Str48bit;
 }
 
@@ -286,11 +281,6 @@ void C_and_D_divider(std::string Str56bit) {
 			D28 += Str56bit[i];
 		}
 	}
-
-
-	std::cout << "C=" << C28 << std::endl;
-	std::cout << "D=" << D28 << std::endl;
-
 }
 
 
@@ -324,8 +314,6 @@ std::string C_plus_D(std::string Cpart, std::string Dpart) {
 	key56bit = Cpart;
 	key56bit += Dpart;
 
-	std::cout << "united: " << key56bit << std::endl;
-
 	return key56bit;
 }
 
@@ -347,7 +335,7 @@ void Key_Schedule() {
 
 		key56bit = C_plus_D(C28, D28);
 
-		subkeys[i-1] = PC_2(key56bit, key48bit);
+		subkeys[i-1] += PC_2(key56bit, key48bit);
 
 		key48bit = "";
 	}
