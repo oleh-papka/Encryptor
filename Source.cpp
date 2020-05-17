@@ -12,7 +12,7 @@
 #include <random>
 
 #pragma comment(lib, "shlwapi.lib")
-
+#pragma warning(disable : 4996)
 
 //========================================================
 //						Variables
@@ -22,7 +22,7 @@ bool encryption_flag = 0;
 bool decryption_flag = 0;
 
 char path_PlainText[255];
-char path_Copy[255];
+std::string path_Copy;
 char path_key[255];
 
 std::string key; // Main key
@@ -31,10 +31,22 @@ std::string bin_key; // Main key in binary
 std::string key56bit; // After PC1 key in binary
 std::string key48bit; // After PC2 Sub key in binary
 
+std::string subkeys[16]; // All subkeys in one place
+
+
 std::string C28; // "Left" part of key56bit
 std::string D28; // "Right" part of key56bit
 
-std::string subkeys[16]; // All subkeys in one place
+
+std::string data64[64]; // Data block for encryption
+char buffer[64];	//Buffer stores read data form data64
+
+
+int completeBlockNum;
+int uncompleteBlockNum;
+bool uncompleteBlock_flag = false;
+
+long int size; // Size of .bin file in bytes
 
 //========================================================
 //========================================================
@@ -53,6 +65,7 @@ std::string GetWorkingDir() {
 	return path;
 }
 
+//std::string path_Copy;
 
 // Creates a copy of the PlainText in Copy.bin file to process it
 void Copy_in_BIN (){
@@ -60,14 +73,23 @@ void Copy_in_BIN (){
 	std::cout << "Please enter path to the file for encryption (PlainText): ";
 	std::cin >> path_PlainText;
 
-	std::string path_Copy = GetWorkingDir();
+	path_Copy  = GetWorkingDir();
 
-	path_Copy += "Copy.bin";
+	path_Copy += "Copy.txt";
 
 	std::ifstream Readfile (path_PlainText, std::ifstream::binary);
-	std::ofstream Copyfile (path_Copy,  std::fstream::binary);
-	
-	Copyfile << Readfile.rdbuf();
+	std::ofstream Copyfile (path_Copy, std::fstream::binary);
+
+
+
+
+	std::cout << "Reading bits... " << std::endl;
+	char c;
+	while (Readfile.get(c))
+	{
+		for (int i = 7; i >= 0; i--) // or (int i = 0; i < 8; i++)  if you want reverse bit order in bytes
+			Copyfile << ((c >> i) & 1);
+	}
 
 	Readfile.close();
 	Copyfile.close();
@@ -376,6 +398,127 @@ void Hello() {
 }
 
 
+// Get size of file in bytes
+long int FileSize(std::string filePath) {
+	long int length;
+
+	std::ifstream file(filePath, std::ifstream::binary);
+
+	if (file) {
+		file.seekg(0, file.end);
+		length = file.tellg();
+		file.seekg(0, file.beg);
+	}
+
+	file.close();
+
+	return length;
+}
+
+ 
+// How many blocks will be
+void Block_Amount() {
+
+	if (size%64 == 0) {
+		completeBlockNum = size / 64;
+
+		std::cout << "Complete blocks = " << completeBlockNum << std::endl;
+	}
+	else
+	{
+		uncompleteBlockNum = size % 64;
+		uncompleteBlock_flag = true;
+
+		std::cout << "Uncomplete blocks = " << uncompleteBlockNum << std::endl;
+
+		completeBlockNum = (size - uncompleteBlockNum) / 64;
+		std::cout << "Complete blocks = " << completeBlockNum << std::endl;
+	}
+}
+
+
+
+
+// Reads data block by block (by 64 bits) Reading into buffer
+void BlockReading() {
+
+
+	
+	std::ifstream DataReading(path_Copy, std::ios::in | std::ios::binary);	// opening our file for reading
+
+	
+	std::cout << "Reading 64 characters... ";
+	// read data as a block:
+	DataReading.read(buffer, 64);
+
+	if (DataReading)
+		std::cout << "all characters read successfully.";
+	else
+		std::cout << "error: only " << DataReading.gcount() << " could be read";
+
+
+
+	std::cout << "First block 0-64 : " << std::endl;
+	for (int i = 0; i <= 64; i++)
+	{
+		std::cout << buffer[i];
+	}
+
+	std::cout << " LOL" << std::endl;
+
+	DataReading.read(buffer, 64);
+
+	std::cout << "Second block 64-128 : " << std::endl;
+	for (int i = 0; i <= 64; i++)
+	{
+		std::cout << buffer[i] ;
+	}
+
+
+	DataReading.close();
+}
+
+
+
+/*
+	// allocate memory:
+	char* buffer = new char[length];
+
+	// read data as a block:
+	is.read(buffer, length);
+
+	is.close();
+
+	// print content:
+	std::cout.write(buffer, length);
+
+	delete[] buffer;
+
+
+
+*/
+
+
+/* For .bin reading 
+
+	char buffer[64];
+	std::ifstream PlainTextBIN(path_Copy, std::ifstream::binary);
+	myFile.read(buffer, 64);
+
+
+	std::ifstream fin("C:\\file.txt");
+char buffer[1024]; //I prefer array more than vector for such implementation
+
+fin.read(buffer,sizeof(buffer));//first read get the first 1024 byte
+
+fin.read(buffer,sizeof(buffer));//second read get the second 1024 byte
+  
+
+
+*/
+
+
+
 
 
 
@@ -399,10 +542,24 @@ int main() {
 
 	//key = "F1FFFF3FFAFFF5FF"; // our test key
 
-	Key_generator();
+	//Key_generator();
 
-	Key_Schedule();
+	//Key_Schedule();
+	Copy_in_BIN();
+	
+	std::cout << "Path to file: " << path_Copy << std::endl;
 
+	size = FileSize(path_Copy) * 8; // size of file in bits
+
+	std::cout << "Size: " << size << std::endl;
+
+	Block_Amount();
+
+	BlockReading();
+
+	//Block_Amount();
+
+	//LenFile();
 
 	return 0;
 }

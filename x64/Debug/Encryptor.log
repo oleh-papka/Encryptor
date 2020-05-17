@@ -1,0 +1,3 @@
+﻿  Source.cpp
+D:\C++\Encryptor\Source.cpp(397,22): warning C4244: '=': conversion from 'std::streamoff' to 'long', possible loss of data
+  Encryptor.vcxproj -> D:\C++\Encryptor\x64\Debug\Encryptor.exe
