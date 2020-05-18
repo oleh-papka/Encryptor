@@ -257,6 +257,30 @@ void Key_Logic() {
 // Permutated Choice 1 from 64 to 56 bits
 std::string PC_1(std::string Str64bit, std::string Str56bit) {
 
+	std::cout << "Key before: " << Str64bit << std::endl;
+
+	int PC1_table[56] = { 56, 48, 40, 32, 24, 16, 8,
+						 0, 57, 49, 41, 33, 25, 17,
+						 9, 1, 58, 50, 42, 34, 26,
+						 18, 10, 2, 59, 51, 43, 35,
+						 62, 54, 46, 38, 30, 22, 14,
+						 6, 61, 53, 45, 37, 29, 21,
+						 13, 5, 60, 52, 44, 36, 28,
+						 20, 12, 4, 27, 19, 11, 3 };
+
+
+
+	for (int i = 0; i < 56; i++) {
+		Str56bit += Str64bit[PC1_table[i]];
+	}
+
+
+	std::cout << "PC1 key now: " << Str56bit << std::endl;
+
+
+
+
+	/*
 	for (int i = 0; i < 64; i++)
 	{
 		if ((i + 1) % 8 == 0) {
@@ -265,6 +289,9 @@ std::string PC_1(std::string Str64bit, std::string Str56bit) {
 			Str56bit += Str64bit[i];
 		}
 	}
+	*/
+
+
 
 	return Str56bit;
 }
@@ -273,6 +300,31 @@ std::string PC_1(std::string Str64bit, std::string Str56bit) {
 // Permutated Choice 2 from 56 to 48 bits
 std::string PC_2(std::string Str56bit, std::string Str48bit) {
 
+
+	std::cout << "Key before: " << Str56bit << std::endl;
+
+	int PC2_table[48] = {	13, 16, 10, 23, 0, 4,
+							2, 27, 14, 5, 20, 9,
+							22, 18, 11,	3, 25, 7,
+							15, 6, 26, 19, 12, 1,
+							40, 51, 30, 36,	46,	54,
+							29,	39,	50,	44,	32,	47,
+							43,	48,	38,	55,	33,	52,
+							45,	41,	49,	35,	28,	31 };
+
+
+
+	for (int i = 0; i < 48; i++) {
+		Str48bit += Str56bit[PC2_table[i]];
+	}
+
+
+	std::cout << "PC2 key now: " << Str48bit << std::endl;
+
+
+
+
+	/*
 	for (int i = 0; i < 56; i++)
 	{
 		if ((i+1)%8 == 0 || i == 0) {
@@ -281,6 +333,7 @@ std::string PC_2(std::string Str56bit, std::string Str48bit) {
 			Str48bit += Str56bit[i];
 		}
 	}
+	*/
 
 	return Str48bit;
 }
@@ -546,23 +599,28 @@ int main() {
 
 	//Key_Logic();
 
-	//key = "F1FFFF3FFAFFF5FF"; // our test key
+	key = "F1FFFF3FFAFFF5FF"; // our test key
+
+
+	HEX2BIN(key); // Now key is in BIN
+	key56bit = PC_1(bin_key, key56bit);
+	key48bit = PC_2(key56bit, key48bit);
 
 	//Key_generator();
 
 	//Key_Schedule();
 
-	Copy_in_BIN();
+	//Copy_in_BIN();
 	
-	std::cout << "Path to file: " << path_Copy << std::endl;
+	//std::cout << "Path to file: " << path_Copy << std::endl;
 
-	size = FileSize(path_Copy); // size of file in bits
+	//size = FileSize(path_Copy); // size of file in bits
 
-	std::cout << "Size in bits: " << size << std::endl;
+	//std::cout << "Size in bits: " << size << std::endl;
 
-	Block_Amount();
+	//Block_Amount();
 
-	BlockReading();
+	//BlockReading();
 
 	//Block_Amount();
 
