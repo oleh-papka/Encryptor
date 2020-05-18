@@ -57,7 +57,7 @@ long int size; // Size of .bin file in bytes
 //						Functions
 //========================================================
 
-// Gets direction of execytable file
+// Gets direction of executable file
 std::string GetWorkingDir() {
 	char path[MAX_PATH] = "";
 	GetCurrentDirectoryA(MAX_PATH, path);
@@ -67,7 +67,7 @@ std::string GetWorkingDir() {
 
 //std::string path_Copy;
 
-// Creates a copy of the PlainText in Copy.bin file to process it
+// Creates a copy of the PlainText in Copy.txt file to process it
 void Copy_in_BIN (){
 
 	std::cout << "Please enter path to the file for encryption (PlainText): ";
@@ -79,8 +79,6 @@ void Copy_in_BIN (){
 
 	std::ifstream Readfile (path_PlainText, std::ifstream::binary);
 	std::ofstream Copyfile (path_Copy, std::fstream::binary);
-
-
 
 
 	std::cout << "Reading bits... " << std::endl;
@@ -426,10 +424,18 @@ void Block_Amount() {
 	}
 	else
 	{
-		uncompleteBlockNum = size % 64;
+
+		if (size > 64) {
+			uncompleteBlockNum = size % 64;
+		}
+		else {
+			uncompleteBlockNum = 64 - size;
+		}
+
+		
 		uncompleteBlock_flag = true;
 
-		std::cout << "Uncomplete blocks = " << uncompleteBlockNum << std::endl;
+		std::cout << "Uncomplete block bits = " << uncompleteBlockNum << std::endl;
 
 		completeBlockNum = (size - uncompleteBlockNum) / 64;
 		std::cout << "Complete blocks = " << completeBlockNum << std::endl;
@@ -545,13 +551,14 @@ int main() {
 	//Key_generator();
 
 	//Key_Schedule();
+
 	Copy_in_BIN();
 	
 	std::cout << "Path to file: " << path_Copy << std::endl;
 
-	size = FileSize(path_Copy) * 8; // size of file in bits
+	size = FileSize(path_Copy); // size of file in bits
 
-	std::cout << "Size: " << size << std::endl;
+	std::cout << "Size in bits: " << size << std::endl;
 
 	Block_Amount();
 
