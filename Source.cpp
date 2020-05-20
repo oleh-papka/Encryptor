@@ -588,6 +588,30 @@ std::string FP(std::string StrToFP) {
 }
 
 
+// Outputs encrypted 64 bit data block
+void Writing_Encrypted_64bit(std::string path, std::string data) {
+
+	
+
+	std::ofstream File_output(path, std::ofstream::binary | std::ios_base::app); // Opening that file for writing
+	std::string writing_dat;	// Temporary variable
+	for (int i = 0; i < 8; i++)
+	{
+		for (int j = 0; j < 8; j++)
+		{
+			writing_dat += data[8 * i + j];
+		}
+		
+
+		File_output << static_cast<uint_fast8_t>(std::bitset<8>(writing_dat).to_ulong());
+
+		std::cout << "Info: " << writing_dat << std::endl;
+
+		writing_dat = "";
+	}
+
+	File_output.close();
+}
 
 
 /*
@@ -629,9 +653,6 @@ fin.read(buffer,sizeof(buffer));//second read get the second 1024 byte
 
 
 
-
-
-
 //========================================================
 //========================================================
 
@@ -653,9 +674,9 @@ int main() {
 	key = "F1FFFF3FFAFFF5FF"; // our test key
 
 
-	HEX2BIN(key); // Now key is in BIN
-	key56bit = PC_1(bin_key, key56bit);
-	key48bit = PC_2(key56bit, key48bit);
+	//HEX2BIN(key); // Now key is in BIN
+	//key56bit = PC_1(bin_key, key56bit);
+	//key48bit = PC_2(key56bit, key48bit);
 
 	//Key_generator();
 
@@ -676,6 +697,21 @@ int main() {
 	//Block_Amount();
 
 	//LenFile();
+
+
+
+
+	//=============== test ==================
+	std::string dat = "0100100100100111011011010010000001001111011011000110010101100111";
+	std::string path_temp;
+
+	std::cout << "Enter path: ";
+	std::cin >> path_temp;
+
+
+	Writing_Encrypted_64bit(path_temp, dat);
+
+	std::cout << path_temp << "<- LOL" << std::endl;
 
 	return 0;
 }
