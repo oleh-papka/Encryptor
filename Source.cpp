@@ -21,6 +21,9 @@
 bool encryption_flag = 0;
 bool decryption_flag = 0;
 
+int position = 0;	// For block reading
+bool file_end_flag = 0; // To check if all file is read
+
 char path_PlainText[255];
 std::string path_Copy;
 char path_key[255];
@@ -42,8 +45,8 @@ std::string data64[64]; // Data block for encryption
 char buffer[64];	//Buffer stores read data form data64
 
 
-int completeBlockNum;
-int uncompleteBlockNum;
+int completeBlockNum;	// How many blocks will be in file
+int uncompleteBlockNum;	// How many bits are off the block
 bool uncompleteBlock_flag = false;
 
 long int size; // Size of .bin file in bytes
@@ -449,7 +452,7 @@ void Hello() {
 }
 
 
-// Get size of file in bytes
+// Get size of file in bits
 long int FileSize(std::string filePath) {
 	long int length;
 
@@ -475,19 +478,15 @@ void Block_Amount() {
 
 		std::cout << "Complete blocks = " << completeBlockNum << std::endl;
 	}
-	else
-	{
-
+	else {
 		if (size > 64) {
 			uncompleteBlockNum = size % 64;
 		}
 		else {
 			uncompleteBlockNum = 64 - size;
 		}
-
 		
 		uncompleteBlock_flag = true;
-
 		std::cout << "Uncomplete block bits = " << uncompleteBlockNum << std::endl;
 
 		completeBlockNum = (size - uncompleteBlockNum) / 64;
@@ -496,44 +495,70 @@ void Block_Amount() {
 }
 
 
-// Reads data block by block (by 64 bits) Reading into buffer
+// Reads data block by block (by 64 bits) Reading into var "buffer"
 void BlockReading() {
+	
+	if (file_end_flag == true) {
+		std::cout << "File already read!" << std::endl;
+	}
+	else{
+		std::ifstream DataReading(path_Copy, std::ios::in | std::ios::binary);	// opening our file for reading
 
+		DataReading.seekg(position);
+
+		if (completeBlockNum == 0 && uncompleteBlock_flag == true) { // we reached last uncomplete block
+
+			std::cout << "Reading with pattering" << std::endl; // fpr debugging
+
+			DataReading.read(buffer, 64 - uncompleteBlockNum);	// Reads all data that lasts
+
+			// Filling with pattern = "11111111"
+			char pattern[8] = { '1','1','1','1','1','1','1','1' }; // pattern itself
+			int j = 0; // temp var for writing patterns
+
+			for (int i = 0; i < uncompleteBlockNum; i++) {
+
+				buffer[(64 - uncompleteBlockNum) + i] = pattern[j];
+				j++;
+
+				if (j == 7) j = 0; // to contuinue pattering
+			}
+		}
+
+		// Reading info to var "buffer" till end of file or till last uncomplete block
+		if (completeBlockNum != 0) {
+			DataReading.read(buffer, 64);
+			completeBlockNum--;
+		}
+
+		position += 64;
+
+		if (size <= position) {
+			file_end_flag = true;
+		}
+
+		DataReading.close();
+	
+	}
 
 	
-	std::ifstream DataReading(path_Copy, std::ios::in | std::ios::binary);	// opening our file for reading
-
-	
-	std::cout << "Reading 64 characters... ";
-	// read data as a block:
-	DataReading.read(buffer, 64);
-
-	if (DataReading)
-		std::cout << "all characters read successfully.";
-	else
-		std::cout << "error: only " << DataReading.gcount() << " could be read";
+}
 
 
+//========== for debuging =========
 
-	std::cout << "First block 0-64 : " << std::endl;
-	for (int i = 0; i <= 64; i++)
-	{
+
+void Otput_buffer() {
+	std::cout << "Buffer now: ";
+	for (int i = 0; i < 64; i++){
+
 		std::cout << buffer[i];
 	}
-
-	std::cout << " LOL" << std::endl;
-
-	DataReading.read(buffer, 64);
-
-	std::cout << "Second block 64-128 : " << std::endl;
-	for (int i = 0; i <= 64; i++)
-	{
-		std::cout << buffer[i] ;
-	}
-
-
-	DataReading.close();
+	std::cout << "\n";
 }
+
+
+//========== for debuging =========
 
 
 // Initial Permutation
@@ -698,20 +723,36 @@ int main() {
 
 	//LenFile();
 
+	// ========================= testing Buffer reading of blocks
 
+	Copy_in_BIN();
+	size = FileSize(path_Copy);
+	Block_Amount();
+
+	BlockReading();
+	Otput_buffer();
+
+	//memset(buffer, 0, 64);
+
+	BlockReading();
+	Otput_buffer();
+
+
+	BlockReading();
 
 
 	//=============== test ==================
-	std::string dat = "0100100100100111011011010010000001001111011011000110010101100111";
-	std::string path_temp;
+	//std::string dat = "0100100100100111011011010010000001001111011011000110010101100111";
+	//std::string path_temp;
 
-	std::cout << "Enter path: ";
-	std::cin >> path_temp;
+	//std::cout << "Enter path: ";
+	//std::cin >> path_temp;
 
 
-	Writing_Encrypted_64bit(path_temp, dat);
+	//Writing_Encrypted_64bit(path_temp, dat);
 
-	std::cout << path_temp << "<- LOL" << std::endl;
+	//std::cout << path_temp << "<- LOL" << std::endl;
+	
 
 	return 0;
 }
