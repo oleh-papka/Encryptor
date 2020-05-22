@@ -43,6 +43,8 @@ std::string D28; // "Right" part of key56bit
 std::string L32; // "Left" part of data from buffer
 std::string R32; // "Right" part of data from buffer
 
+std::string Left_48bit; // "Left" part after expansion
+
 
 std::string data64[64]; // Data block for encryption
 char buffer[64];	//Buffer stores read data form data64
@@ -438,6 +440,51 @@ void L_R_switching() {
 }
 
 
+// Expansion Box
+std::string Expansion(std::string Left_32bit) {
+
+	std::string Left_48bit;
+
+	std::cout << "Before Expansion: " << Left_32bit << std::endl;
+
+	int expansionTable[48] ={31, 0, 1, 2, 3, 4, 3, 4,
+							5, 6, 7, 8, 9, 8, 9, 10,
+							11, 12, 11, 12, 13, 14, 15, 16,
+							15, 16, 17, 18, 19, 20, 19, 20,
+							21, 22, 23, 24, 23, 24, 25, 26,
+							27, 28, 27, 28, 29, 30, 31, 0 };
+
+	for (int i = 0; i < 48; i++) {
+		Left_48bit += Left_32bit[expansionTable[i]];
+	}
+
+	std::cout << "After Expansion: " << Left_48bit << std::endl;
+
+
+	return Left_48bit;
+}
+
+
+// XOR of Left 48 bits and round key
+void XOR(std::string Left_48bit, std::string Round_SubKey) {
+
+	std::string temp_string;
+
+	for (int i = 0; i < 48; i++) {
+
+		if (Left_48bit[i] == Round_SubKey[i]) {
+			temp_string += '0';
+		}
+		else {
+			temp_string += '1';
+		}
+	}
+	
+	Left_48bit = "";
+	Left_48bit = temp_string;
+}
+
+
 // Keyschedule
 void Key_Schedule() {
 	HEX2BIN(key); // Now key is in BIN
@@ -735,69 +782,9 @@ fin.read(buffer,sizeof(buffer));//second read get the second 1024 byte
 int main() {
 
 	std::cout << "======= Hello! =======" << std::endl;
+
+	//key = "F1FFFF3FFAFFF5FF"; // our test key
 	
-	//Hello();
-
-	//Key_Logic();
-
-	key = "F1FFFF3FFAFFF5FF"; // our test key
-
-	
-	//HEX2BIN(key); // Now key is in BIN
-	//key56bit = PC_1(bin_key, key56bit);
-	//key48bit = PC_2(key56bit, key48bit);
-
-	//Key_generator();
-
-	//Key_Schedule();
-
-	//Copy_in_BIN();
-	
-	//std::cout << "Path to file: " << path_Copy << std::endl;
-
-	//size = FileSize(path_Copy); // size of file in bits
-
-	//std::cout << "Size in bits: " << size << std::endl;
-
-	//Block_Amount();
-
-	//BlockReading();
-
-	//Block_Amount();
-
-	//LenFile();
-
-	// ========================= testing Buffer reading of blocks
-
-	//Copy_in_BIN();
-	//size = FileSize(path_Copy);
-	//Block_Amount();
-
-	//BlockReading();
-	//Otput_buffer();
-
-	//memset(buffer, 0, 64);
-
-	//BlockReading();
-	//Otput_buffer();
-
-
-	//BlockReading();
-
-
-	//=============== test ==================
-	//std::string dat = "0100100100100111011011010010000001001111011011000110010101100111";
-	//std::string path_temp;
-
-	//std::cout << "Enter path: ";
-	//std::cin >> path_temp;
-
-
-	//Writing_Encrypted_64bit(path_temp, dat);
-
-	//std::cout << path_temp << "<- LOL" << std::endl;
-	
-
 	return 0;
 }
 
