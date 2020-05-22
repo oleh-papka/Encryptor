@@ -40,6 +40,9 @@ std::string subkeys[16]; // All subkeys in one place
 std::string C28; // "Left" part of key56bit
 std::string D28; // "Right" part of key56bit
 
+std::string L32; // "Left" part of data from buffer
+std::string R32; // "Right" part of data from buffer
+
 
 std::string data64[64]; // Data block for encryption
 char buffer[64];	//Buffer stores read data form data64
@@ -394,6 +397,47 @@ std::string C_plus_D(std::string Cpart, std::string Dpart) {
 }
 
 
+// Divides data from buffer (64 bits) on L and R parts
+void L_and_R_divider(char DataBuffer[64]) {
+
+	L32 = "";
+	R32 = "";
+
+	for (int i = 0; i < 64; i++) {
+		if (i < 32)
+		{
+			C28 += DataBuffer[i];
+		}
+		else {
+			D28 += DataBuffer[i];
+		}
+	}
+
+}
+
+
+// Left and Right concatenation
+std::string L_plus_R() {
+
+	std::string str = L32;
+	str += R32;
+
+	return str;
+}
+
+
+// Switching "Left" and "Right" parts
+void L_R_switching() {
+
+	std::string temp_string;
+
+	temp_string = R32;
+	R32 = L32;
+	L32 = temp_string;
+
+}
+
+
 // Keyschedule
 void Key_Schedule() {
 	HEX2BIN(key); // Now key is in BIN
@@ -698,7 +742,7 @@ int main() {
 
 	key = "F1FFFF3FFAFFF5FF"; // our test key
 
-
+	
 	//HEX2BIN(key); // Now key is in BIN
 	//key56bit = PC_1(bin_key, key56bit);
 	//key48bit = PC_2(key56bit, key48bit);
@@ -725,20 +769,20 @@ int main() {
 
 	// ========================= testing Buffer reading of blocks
 
-	Copy_in_BIN();
-	size = FileSize(path_Copy);
-	Block_Amount();
+	//Copy_in_BIN();
+	//size = FileSize(path_Copy);
+	//Block_Amount();
 
-	BlockReading();
-	Otput_buffer();
+	//BlockReading();
+	//Otput_buffer();
 
 	//memset(buffer, 0, 64);
 
-	BlockReading();
-	Otput_buffer();
+	//BlockReading();
+	//Otput_buffer();
 
 
-	BlockReading();
+	//BlockReading();
 
 
 	//=============== test ==================
