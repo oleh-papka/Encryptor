@@ -43,7 +43,11 @@ std::string D28; // "Right" part of key56bit
 std::string L32; // "Left" part of data from buffer
 std::string R32; // "Right" part of data from buffer
 
-std::string Left_48bit; // "Left" part after expansion
+std::string Right_48bit; // "Left" part after expansion
+
+
+int row;	// For s-boxes
+int column;	// For s-boxes
 
 
 std::string data64[64]; // Data block for encryption
@@ -441,11 +445,9 @@ void L_R_switching() {
 
 
 // Expansion Box
-std::string Expansion(std::string Left_32bit) {
+std::string Expansion(std::string Right_32bit) {
 
-	std::string Left_48bit;
-
-	std::cout << "Before Expansion: " << Left_32bit << std::endl;
+	std::cout << "Before Expansion: " << Right_32bit << std::endl;
 
 	int expansionTable[48] ={31, 0, 1, 2, 3, 4, 3, 4,
 							5, 6, 7, 8, 9, 8, 9, 10,
@@ -455,24 +457,24 @@ std::string Expansion(std::string Left_32bit) {
 							27, 28, 27, 28, 29, 30, 31, 0 };
 
 	for (int i = 0; i < 48; i++) {
-		Left_48bit += Left_32bit[expansionTable[i]];
+		Right_48bit += Right_32bit[expansionTable[i]];
 	}
 
-	std::cout << "After Expansion: " << Left_48bit << std::endl;
+	std::cout << "After Expansion: " << Right_48bit << std::endl;
 
 
-	return Left_48bit;
+	return Right_48bit;
 }
 
 
 // XOR of Left 48 bits and round key
-void XOR(std::string Left_48bit, std::string Round_SubKey) {
+void XOR_48bits(std::string R_48bit, std::string Round_SubKey) {
 
 	std::string temp_string;
 
 	for (int i = 0; i < 48; i++) {
 
-		if (Left_48bit[i] == Round_SubKey[i]) {
+		if (R_48bit[i] == Round_SubKey[i]) {
 			temp_string += '0';
 		}
 		else {
@@ -480,8 +482,216 @@ void XOR(std::string Left_48bit, std::string Round_SubKey) {
 		}
 	}
 	
-	Left_48bit = "";
-	Left_48bit = temp_string;
+	R_48bit = "";
+	R_48bit = temp_string;
+}
+
+
+// XOR of Left 48 bits and output of F-function
+void XOR_32bits(std::string R_32bit, std::string F_output) {
+
+	std::string temp_string;
+
+	for (int i = 0; i < 32; i++) {
+
+		if (R_32bit[i] == F_output[i]) {
+			temp_string += '0';
+		}
+		else {
+			temp_string += '1';
+		}
+	}
+
+	R_32bit = "";
+	R_32bit = temp_string;
+}
+
+
+
+// Converting decimal to binary	
+std::string Dec_to_Bin(int decimal) {
+
+	std::string bin_output;
+
+	switch (decimal)
+	{
+	case 0:
+		bin_output = "0000";
+		break;
+	case 1:
+		bin_output = "0001";
+		break;
+	case 2:
+		bin_output = "0010";
+		break;
+	case 3:
+		bin_output = "0011";
+		break;
+	case 4:
+		bin_output = "0100";
+		break;
+	case 5:
+		bin_output = "0101";
+		break;
+	case 6:
+		bin_output = "0110";
+		break;
+	case 7:
+		bin_output = "0111";
+		break;
+	case 8:
+		bin_output = "1000";
+		break;
+	case 9:
+		bin_output = "1001";
+		break;
+	case 10:
+		bin_output = "1010";
+		break;
+	case 11:
+		bin_output = "1011";
+		break;
+	case 12:
+		bin_output = "1100";
+		break;
+	case 13:
+		bin_output = "1101";
+		break;
+	case 14:
+		bin_output = "1110";
+		break;
+	case 15:
+		bin_output = "1111";
+		break;
+
+	default:
+		break;
+	}
+
+	return bin_output;
+}
+
+
+// S-box 
+std::string S_Box_function(std::string R_48bit) {
+
+	std::string R_32bit;	// output of its function
+
+	
+	std::string t_row;	// temporary bin str row 
+	std::string t_column;	// temporary bin str column
+
+	std::string str_6_bit;	// 6-bit data block
+
+	// S-box structure 8-sboxes 4-rows 16-columns
+	int s_box_table[8][4][16] = { 
+						{ 14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7,
+						  0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8,
+						  4, 1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0,
+						  15, 12, 8, 2, 4, 9, 1, 7, 5, 11, 3, 14, 10, 0, 6, 13 },
+						{ 15, 1, 8, 14, 6, 11, 3, 4, 9, 7, 2, 13, 12, 0, 5, 10,
+						  3, 13, 4, 7, 15, 2, 8, 14, 12, 0, 1, 10, 6, 9, 11, 5,
+						  0, 14, 7, 11, 10, 4, 13, 1, 5, 8, 12, 6, 9, 3, 2, 15,
+						  13, 8, 10, 1, 3, 15, 4, 2, 11, 6, 7, 12, 0, 5, 14, 9 },
+						{ 10, 0, 9, 14, 6, 3, 15, 5, 1, 13, 12, 7, 11, 4, 2, 8,
+						  13, 7, 0, 9, 3, 4, 6, 10, 2, 8, 5, 14, 12, 11, 15, 1,
+						  13, 6, 4, 9, 8, 15, 3, 0, 11, 1, 2, 12, 5, 10, 14, 7,
+						  1, 10, 13, 0, 6, 9, 8, 7, 4, 15, 14, 3, 11, 5, 2, 12 },
+						{ 7, 13, 14, 3, 0, 6, 9, 10, 1, 2, 8, 5, 11, 12, 4, 15,
+						  13, 8, 11, 5, 6, 15, 0, 3, 4, 7, 2, 12, 1, 10, 14, 9,
+						  10, 6, 9, 0, 12, 11, 7, 13, 15, 1, 3, 14, 5, 2, 8, 4,
+						  3, 15, 0, 6, 10, 1, 13, 8, 9, 4, 5, 11, 12, 7, 2, 14 },
+						{ 2, 12, 4, 1, 7, 10, 11, 6, 8, 5, 3, 15, 13, 0, 14, 9,
+						  14, 11, 2, 12, 4, 7, 13, 1, 5, 0, 15, 10, 3, 9, 8, 6,
+						  4, 2, 1, 11, 10, 13, 7, 8, 15, 9, 12, 5, 6, 3, 0, 14,
+						  11, 8, 12, 7, 1, 14, 2, 13, 6, 15, 0, 9, 10, 4, 5, 3 },
+						{ 12, 1, 10, 15, 9, 2, 6, 8, 0, 13, 3, 4, 14, 7, 5, 11,
+						  10, 15, 4, 2, 7, 12, 9, 5, 6, 1, 13, 14, 0, 11, 3, 8,
+						  9, 14, 15, 5, 2, 8, 12, 3, 7, 0, 4, 10, 1, 13, 11, 6,
+						  4, 3, 2, 12, 9, 5, 15, 10, 11, 14, 1, 7, 6, 0, 8, 13 },
+						{ 4, 11, 2, 14, 15, 0, 8, 13, 3, 12, 9, 7, 5, 10, 6, 1,
+						  13, 0, 11, 7, 4, 9, 1, 10, 14, 3, 5, 12, 2, 15, 8, 6,
+						  1, 4, 11, 13, 12, 3, 7, 14, 10, 15, 6, 8, 0, 5, 9, 2,
+						  6, 11, 13, 8, 1, 4, 10, 7, 9, 5, 0, 15, 14, 2, 3, 12 },
+						{ 13, 2, 8, 4, 6, 15, 11, 1, 10, 9, 3, 14, 5, 0, 12, 7,
+						  1, 15, 13, 8, 10, 3, 7, 4, 12, 5, 6, 11, 0, 14, 9, 2,
+						  7, 11, 4, 1, 9, 12, 14, 2, 0, 6, 10, 13, 15, 3, 5, 8,
+						  2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11 } };
+	
+
+	for (int Si = 0; Si < 8; Si++) {
+
+		// Reading 6bit block of data //
+		for (int j = 0; j < 6; j++) {
+			str_6_bit += R_48bit[(Si * 6) + j];
+		}
+
+		// Processing 6bit block data //
+		t_row += str_6_bit[0];
+		t_row += str_6_bit[5];
+
+		for (int i = 1; i < 5; i++) {
+			t_column += str_6_bit[i];
+		}
+
+		
+		// Convertion 6bit block data //
+		// converting t_column to binary and writing it to column variable
+		if (t_column == "0000") { column = 0; }
+		if (t_column == "0001") { column = 1; }
+		if (t_column == "0010") { column = 2; }
+		if (t_column == "0011") { column = 3; }
+		if (t_column == "0100") { column = 4; }
+		if (t_column == "0101") { column = 5; }
+		if (t_column == "0110") { column = 6; }
+		if (t_column == "0111") { column = 7; }
+		if (t_column == "1000") { column = 8; }
+		if (t_column == "1001") { column = 9; }
+		if (t_column == "1010") { column = 10; }
+		if (t_column == "1011") { column = 11; }
+		if (t_column == "1100") { column = 12; }
+		if (t_column == "1101") { column = 13; }
+		if (t_column == "1110") { column = 14; }
+		if (t_column == "1111") { column = 15; }
+
+
+		if (t_row == "00") { row = 0; }
+		if (t_row == "01") { row = 1; }
+		if (t_row == "10") { row = 2; }
+		if (t_row == "11") { row = 3; }
+
+
+		R_32bit += Dec_to_Bin(s_box_table[Si][row][column]);
+
+
+		t_row = "";
+		t_column = "";
+		str_6_bit = "";
+	}
+
+	 
+	return R_32bit;
+}
+
+
+// Permutation of 32bit block data
+std::string Permutation(std::string str_32bit) {
+
+	std::string t_str;
+
+	int Permutation_table[32] = { 15, 6, 19, 20, 28, 11, 27, 16,
+								   0, 14, 22, 25,  4, 17, 30,  9,
+								   1,  7, 23, 13, 31, 26,  2,  8,
+								  18, 12, 29,  5, 21, 10,  3, 24 };
+
+	for (int i = 0; i < 32; i++) {
+
+		t_str += str_32bit[Permutation_table[i]];
+	}
+
+
+
+	return t_str;
 }
 
 
@@ -784,7 +994,15 @@ int main() {
 	std::cout << "======= Hello! =======" << std::endl;
 
 	//key = "F1FFFF3FFAFFF5FF"; // our test key
-	
+	std::string R_48bit = "000000000000000000000000000000000000000000000000";
+
+	std::string lol = S_Box_function(R_48bit);
+
+	std::cout << "Test :" << lol << std::endl;
+
+	std::string kek = Permutation(lol);
+
+	std::cout << "Test2 :" << kek << std::endl;
 	return 0;
 }
 
