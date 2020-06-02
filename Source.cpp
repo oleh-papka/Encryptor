@@ -24,6 +24,10 @@ bool decryption_flag = 0;
 int position = 0;	// For block reading
 bool file_end_flag = 0; // To check if all file is read
 
+
+std::string path_File_Save; // path to file with encrypted data
+
+
 char path_PlainText[255];
 std::string path_Copy;
 char path_key[255];
@@ -43,14 +47,14 @@ std::string D28; // "Right" part of key56bit
 std::string L32; // "Left" part of data from buffer
 std::string R32; // "Right" part of data from buffer
 
-std::string Right_48bit; // "Left" part after expansion
+std::string Right_48bit; // after expansion
 
 
 int row;	// For s-boxes
 int column;	// For s-boxes
 
 
-std::string data64[64]; // Data block for encryption
+std::string data64; // Data block for encryption from buffer
 char buffer[64];	//Buffer stores read data form data64
 
 
@@ -69,6 +73,16 @@ long int size; // Size of .bin file in bytes
 //						Functions
 //========================================================
 
+
+
+void Where_to_save() {
+
+	std::cout << "Please enter path for encrypted file: ";
+	std::cin >> path_File_Save;
+
+}
+
+
 // Gets direction of executable file
 std::string GetWorkingDir() {
 	char path[MAX_PATH] = "";
@@ -77,7 +91,6 @@ std::string GetWorkingDir() {
 	return path;
 }
 
-//std::string path_Copy;
 
 // Creates a copy of the PlainText in Copy.txt file to process it
 void Copy_in_BIN (){
@@ -187,25 +200,12 @@ std::string HEX2BIN(std::string str) {
 }
 
 
-// Asks for key where it or enter int if you have
+// Asks for key
 void Key_entering() {
-	std::cout << "Is this a file (.txt) otherwise enter it.  [f] - for file, [e] - enter it" << std::endl;
-
-	char ans;	// Does key in file or enter it
-	std::cin >> ans;
-	if (ans == 'f') {
-		std::cout << "Enter location of your file: ";
-		std::cin >> path_key;
-		std::cout << "Path to key " << path_key << std::endl;
-		std::cout << "Soon!" << std::endl;
-	}
-	else if (ans == 'e') {
-		std::cout << "Enter your key: ";
-		std::cin >> key;
-		std::cout << "Your key " << key << std::endl;
-		std::cout << "Soon!" << std::endl;
-	}
-	else {
+	std::cout << "Ok enter your HEX (16 character):" << std::endl;
+	std::cin >> key;
+	
+	if (key.length() != 16) {
 		std::cout << "Sorry, but ->" << std::endl;
 		Key_entering();
 	}
@@ -269,7 +269,7 @@ void Key_Logic() {
 // Permutated Choice 1 from 64 to 56 bits
 std::string PC_1(std::string Str64bit, std::string Str56bit) {
 
-	std::cout << "Key before: " << Str64bit << std::endl;
+	//std::cout << "Key before: " << Str64bit << std::endl;
 
 	int PC1_table[56] = { 56, 48, 40, 32, 24, 16, 8,
 						 0, 57, 49, 41, 33, 25, 17,
@@ -287,7 +287,7 @@ std::string PC_1(std::string Str64bit, std::string Str56bit) {
 	}
 
 
-	std::cout << "PC1 key now: " << Str56bit << std::endl;
+	//std::cout << "PC1 key now: " << Str56bit << std::endl;
 
 
 
@@ -313,7 +313,7 @@ std::string PC_1(std::string Str64bit, std::string Str56bit) {
 std::string PC_2(std::string Str56bit, std::string Str48bit) {
 
 
-	std::cout << "Key before: " << Str56bit << std::endl;
+	//std::cout << "Key before: " << Str56bit << std::endl;
 
 	int PC2_table[48] = {	13, 16, 10, 23, 0, 4,
 							2, 27, 14, 5, 20, 9,
@@ -331,7 +331,7 @@ std::string PC_2(std::string Str56bit, std::string Str48bit) {
 	}
 
 
-	std::cout << "PC2 key now: " << Str48bit << std::endl;
+	//std::cout << "PC2 key now: " << Str48bit << std::endl;
 
 
 
@@ -404,7 +404,7 @@ std::string C_plus_D(std::string Cpart, std::string Dpart) {
 
 
 // Divides data from buffer (64 bits) on L and R parts
-void L_and_R_divider(char DataBuffer[64]) {
+void L_and_R_divider(std::string DataBuffer) {
 
 	L32 = "";
 	R32 = "";
@@ -412,10 +412,10 @@ void L_and_R_divider(char DataBuffer[64]) {
 	for (int i = 0; i < 64; i++) {
 		if (i < 32)
 		{
-			C28 += DataBuffer[i];
+			L32 += DataBuffer[i];
 		}
 		else {
-			D28 += DataBuffer[i];
+			R32 += DataBuffer[i];
 		}
 	}
 
@@ -445,7 +445,7 @@ void L_R_switching() {
 
 
 // Expansion Box
-std::string Expansion(std::string Right_32bit) {
+void Expansion(std::string Right_32bit) {
 
 	std::cout << "Before Expansion: " << Right_32bit << std::endl;
 
@@ -461,9 +461,6 @@ std::string Expansion(std::string Right_32bit) {
 	}
 
 	std::cout << "After Expansion: " << Right_48bit << std::endl;
-
-
-	return Right_48bit;
 }
 
 
@@ -697,11 +694,11 @@ std::string Permutation(std::string str_32bit) {
 
 // Keyschedule
 void Key_Schedule() {
+
 	HEX2BIN(key); // Now key is in BIN
+
 	key56bit = PC_1(bin_key, key56bit);
-
-
-
+	
 	for (int i = 1; i <= 16; i++)
 	{
 		C_and_D_divider(key56bit);
@@ -717,39 +714,6 @@ void Key_Schedule() {
 		key48bit = "";
 	}
 	   	 
-}
-
-
-// Choose encryptioon or decryption
-void Hello() {
-
-	std::cout << "For encryption enter [e] , for decryption [d]"<< std::endl;
-	char answer;
-	std::cin >> answer; // Get the answer
-
-	if (answer == 'e') 
-	{
-		encryption_flag = 1;
-		std::cout << "ok, encryption" << std::endl;
-		Copy_in_BIN();	// Gets file and creates copy in .bin
-		Key_Logic(); // Gets the key
-	}
-	else if (answer == 'd')
-	{
-		decryption_flag = 1;
-		std::cout << "ok, decryption soon" << std::endl;
-	}
-	else if (answer == 'F')	// Easter egg (why not?)
-	{
-		std::cout << "Thanks, you paid respect" << std::endl;
-		Hello();
-	}
-	else
-	{
-		std::cout << "Sorry, but ->" << std::endl;
-		Hello();
-	}
-
 }
 
 
@@ -837,14 +801,20 @@ void BlockReading() {
 		if (size <= position) {
 			file_end_flag = true;
 		}
-
 		DataReading.close();
-	
 	}
-
-	
 }
 
+
+// From char array to normal string
+std::string Buffer_to_string() {
+
+	for (int i = 0; i < 64; i++) {
+		
+		data64 += buffer[i];
+	}
+	return data64;
+}
 
 //========== for debuging =========
 
@@ -917,8 +887,6 @@ std::string FP(std::string StrToFP) {
 // Outputs encrypted 64 bit data block
 void Writing_Encrypted_64bit(std::string path, std::string data) {
 
-	
-
 	std::ofstream File_output(path, std::ofstream::binary | std::ios_base::app); // Opening that file for writing
 	std::string writing_dat;	// Temporary variable
 	for (int i = 0; i < 8; i++)
@@ -937,6 +905,20 @@ void Writing_Encrypted_64bit(std::string path, std::string data) {
 	}
 
 	File_output.close();
+}
+
+
+// F-function itself
+std::string F_function(std::string subkey, std::string Round_R32) {
+
+	Expansion(Round_R32);
+
+	XOR_48bits(Right_48bit, subkey);
+
+	std::string output;
+	output = Permutation(S_Box_function(Right_48bit));
+	
+	return  output;
 }
 
 
@@ -979,6 +961,84 @@ fin.read(buffer,sizeof(buffer));//second read get the second 1024 byte
 
 
 
+// ================= Main processing function =====================
+
+// Inputting all valuable data for next step
+void Hello() {
+
+	std::cout << "For encryption enter [e] , for decryption [d]" << std::endl;
+	char answer;
+	std::cin >> answer; // Get the answer
+
+	if (answer == 'e')
+	{
+		encryption_flag = 1;
+		std::cout << "ok, encryption" << std::endl;
+		Copy_in_BIN();	// Gets file and creates copy of it's bits in .txt
+		Key_Logic(); // Gets the key
+	}
+	else if (answer == 'd')
+	{
+		decryption_flag = 1;
+		std::cout << "ok, decryption soon" << std::endl;
+	}
+	else if (answer == 'F')	// Easter egg (why not?)
+	{
+		std::cout << "Thanks, you paid respect" << std::endl;
+		Hello();
+	}
+	else
+	{
+		std::cout << "Sorry, but ->" << std::endl;
+		Hello();
+	}
+}
+
+
+/*
+
+ there we should put 
+	Where_to_save();
+	Key_Schedule();
+
+*/
+
+
+void Main_Processing_func() {
+
+	size = FileSize(path_Copy);
+	
+	Block_Amount();
+
+	while (file_end_flag != true) {
+		
+		BlockReading();
+
+		Otput_buffer();
+
+		std::string t_str_out_IP;
+		t_str_out_IP = IP(Buffer_to_string());
+
+		for (int round = 0; round < 16; round++) {
+
+			L_and_R_divider(t_str_out_IP);
+			
+			XOR_32bits(R32, F_function(subkeys[round], R32));
+
+			L_R_switching();
+		}
+
+		std::string t_str_out_FP;
+		t_str_out_FP = FP(L_plus_R());
+
+		Writing_Encrypted_64bit(path_File_Save, t_str_out_FP);
+	}
+	
+
+}
+
+
+
 //========================================================
 //========================================================
 
@@ -991,18 +1051,18 @@ fin.read(buffer,sizeof(buffer));//second read get the second 1024 byte
 
 int main() {
 
-	std::cout << "======= Hello! =======" << std::endl;
+	std::cout << "======= Oh, hi! =======" << std::endl;
 
 	//key = "F1FFFF3FFAFFF5FF"; // our test key
-	std::string R_48bit = "000000000000000000000000000000000000000000000000";
+	
+	Hello();
 
-	std::string lol = S_Box_function(R_48bit);
+	Where_to_save();
 
-	std::cout << "Test :" << lol << std::endl;
+	Key_Schedule();
 
-	std::string kek = Permutation(lol);
+	Main_Processing_func();
 
-	std::cout << "Test2 :" << kek << std::endl;
 	return 0;
 }
 
