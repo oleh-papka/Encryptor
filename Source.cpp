@@ -331,7 +331,7 @@ std::string PC_2(std::string Str56bit, std::string Str48bit) {
 	}
 
 
-	//std::cout << "PC2 key now: " << Str48bit << std::endl;
+	std::cout << "PC2 key now: " << Str48bit << std::endl;
 
 
 
@@ -464,8 +464,8 @@ void Expansion(std::string Right_32bit) {
 }
 
 
-// XOR of Left 48 bits and round key
-void XOR_48bits(std::string R_48bit, std::string Round_SubKey) {
+// XOR of Right 48 bits and round key
+std::string XOR_48bits(std::string R_48bit, std::string Round_SubKey) {
 
 	std::string temp_string;
 
@@ -481,17 +481,19 @@ void XOR_48bits(std::string R_48bit, std::string Round_SubKey) {
 	
 	R_48bit = "";
 	R_48bit = temp_string;
+
+	return R_48bit;
 }
 
 
-// XOR of Left 48 bits and output of F-function
-void XOR_32bits(std::string R_32bit, std::string F_output) {
+// XOR of Left 32 bits and output of F-function
+std::string XOR_32bits(std::string L_32bit, std::string F_output) {
 
 	std::string temp_string;
 
 	for (int i = 0; i < 32; i++) {
 
-		if (R_32bit[i] == F_output[i]) {
+		if (L_32bit[i] == F_output[i]) {
 			temp_string += '0';
 		}
 		else {
@@ -499,8 +501,12 @@ void XOR_32bits(std::string R_32bit, std::string F_output) {
 		}
 	}
 
-	R_32bit = "";
-	R_32bit = temp_string;
+	L_32bit = "";
+	L_32bit = temp_string;
+
+	//std::cout << "LOL this test R32bit block = " << R_32bit << std::endl;
+
+	return L_32bit;
 }
 
 
@@ -695,7 +701,13 @@ std::string Permutation(std::string str_32bit) {
 // Keyschedule
 void Key_Schedule() {
 
-	HEX2BIN(key); // Now key is in BIN
+
+	std::string HEX_OUT;
+	HEX_OUT = HEX2BIN(key); // Now key is in BIN
+	bin_key = HEX_OUT;
+
+	std::cout << "+++++++++++++++++++++++++++ hey bitch key: " << bin_key << std::endl;
+
 
 	key56bit = PC_1(bin_key, key56bit);
 	
@@ -809,6 +821,8 @@ void BlockReading() {
 // From char array to normal string
 std::string Buffer_to_string() {
 
+	data64 = "";
+
 	for (int i = 0; i < 64; i++) {
 		
 		data64 += buffer[i];
@@ -835,7 +849,7 @@ void Otput_buffer() {
 // Initial Permutation
 std::string IP(std::string StrToIP){
 
-	std::string permutatedStr;
+	std::string IpermutatedStr = "";
 
 	std::cout << "IP str before: " << StrToIP << std::endl;
 
@@ -849,18 +863,18 @@ std::string IP(std::string StrToIP){
 						62,	54,	46,	38,	30,	22,	14,	6 };
 
 	for (int i = 0; i < 64; i++) {
-		permutatedStr += StrToIP[IP_table[i]];
+		IpermutatedStr += StrToIP[IP_table[i]];
 	}
 	
-	std::cout << "IP str now: " << permutatedStr << std::endl;
+	std::cout << "IP str now: " << IpermutatedStr << std::endl;
 
-	return permutatedStr;
+	return IpermutatedStr;
 }
 
 // Final Permutation
 std::string FP(std::string StrToFP) {
 
-	std::string permutatedStr;
+	std::string FpermutatedStr = "";
 
 	std::cout << "FP str before: " << StrToFP << std::endl;
 
@@ -875,12 +889,12 @@ std::string FP(std::string StrToFP) {
 	};
 
 	for (int i = 0; i < 64; i++) {
-		permutatedStr += StrToFP[FP_table[i]];
+		FpermutatedStr += StrToFP[FP_table[i]];
 	}
 
-	std::cout << "FP str now: " << permutatedStr << std::endl;
+	std::cout << "FP str now: " << FpermutatedStr << std::endl;
 
-	return permutatedStr;
+	return FpermutatedStr;
 }
 
 
@@ -913,11 +927,21 @@ std::string F_function(std::string subkey, std::string Round_R32) {
 
 	Expansion(Round_R32);
 
-	XOR_48bits(Right_48bit, subkey);
+	std::cout << " SUB key= " << subkey << std::endl;
+
+	std::string XORoutput;
+	XORoutput = XOR_48bits(Right_48bit, subkey);
 
 	std::string output;
-	output = Permutation(S_Box_function(Right_48bit));
+
+	output = Permutation(S_Box_function(XORoutput));
 	
+	std::cout << "====== F  output= " << output << std::endl;
+
+
+	XORoutput = "";
+	Right_48bit = "";
+
 	return  output;
 }
 
@@ -1019,21 +1043,41 @@ void Main_Processing_func() {
 		std::string t_str_out_IP;
 		t_str_out_IP = IP(Buffer_to_string());
 
+		L_and_R_divider(t_str_out_IP);
+
+
 		for (int round = 0; round < 16; round++) {
 
-			L_and_R_divider(t_str_out_IP);
 			
-			XOR_32bits(R32, F_function(subkeys[round], R32));
+			
+			std::cout << "=== R32 = " << R32 << std::endl;
+
+
+			std::string XORoutput;
+			XORoutput = XOR_32bits(L32, F_function(subkeys[round], R32));
+			L32 = XORoutput;
+
+			std::cout << "=== Round = " << round << std::endl;
 
 			L_R_switching();
+
+			std::cout << "=== After switching R32 = " << R32 << std::endl;
 		}
 
-		std::string t_str_out_FP;
+		L_R_switching();
+
+		std::string t_str_out_FP = "";
 		t_str_out_FP = FP(L_plus_R());
 
 		Writing_Encrypted_64bit(path_File_Save, t_str_out_FP);
 	}
 	
+
+}
+
+
+
+void Decryption() {
 
 }
 
@@ -1056,12 +1100,31 @@ int main() {
 	//key = "F1FFFF3FFAFFF5FF"; // our test key
 	
 	Hello();
+	//path_PlainText = "D:\\1.txt";
+	//Copy_in_BIN();	// Gets file and creates copy of it's bits in .txt
+	
+
 
 	Where_to_save();
+
 
 	Key_Schedule();
 
 	Main_Processing_func();
+
+
+	// end
+
+	// declaring character array 
+	char char_array[255];
+
+	// copying the contents of the 
+	// string to char array 
+	strcpy(char_array, path_Copy.c_str());
+
+	if (remove(char_array) == 0) {
+		printf("Deleted successfully");
+	}
 
 	return 0;
 }
