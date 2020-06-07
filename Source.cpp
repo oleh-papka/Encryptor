@@ -62,7 +62,7 @@ int completeBlockNum;	// How many blocks will be in file
 int uncompleteBlockNum;	// How many bits are off the block
 bool uncompleteBlock_flag = false;
 
-long int size; // Size of .bin file in bytes
+long int size; // Size of .bin file in bits
 
 //========================================================
 //========================================================
@@ -447,7 +447,7 @@ void L_R_switching() {
 // Expansion Box
 void Expansion(std::string Right_32bit) {
 
-	std::cout << "Before Expansion: " << Right_32bit << std::endl;
+	//std::cout << "Before Expansion: " << Right_32bit << std::endl;
 
 	int expansionTable[48] ={31, 0, 1, 2, 3, 4, 3, 4,
 							5, 6, 7, 8, 9, 8, 9, 10,
@@ -460,7 +460,7 @@ void Expansion(std::string Right_32bit) {
 		Right_48bit += Right_32bit[expansionTable[i]];
 	}
 
-	std::cout << "After Expansion: " << Right_48bit << std::endl;
+	//std::cout << "After Expansion: " << Right_48bit << std::endl;
 }
 
 
@@ -706,7 +706,7 @@ void Key_Schedule() {
 	HEX_OUT = HEX2BIN(key); // Now key is in BIN
 	bin_key = HEX_OUT;
 
-	std::cout << "+++++++++++++++++++++++++++ hey bitch key: " << bin_key << std::endl;
+	//std::cout << "+++++++++++++++++++++++++++ hey bitch key: " << bin_key << std::endl;
 
 
 	key56bit = PC_1(bin_key, key56bit);
@@ -757,7 +757,7 @@ void Block_Amount() {
 	}
 	else {
 		if (size > 64) {
-			uncompleteBlockNum = size % 64;
+			uncompleteBlockNum = ((size/64)+1)*64-size;
 		}
 		else {
 			uncompleteBlockNum = 64 - size;
@@ -766,10 +766,12 @@ void Block_Amount() {
 		uncompleteBlock_flag = true;
 		std::cout << "Uncomplete block bits = " << uncompleteBlockNum << std::endl;
 
-		completeBlockNum = (size - uncompleteBlockNum) / 64;
+		completeBlockNum = size / 64;
 		std::cout << "Complete blocks = " << completeBlockNum << std::endl;
 	}
 }
+
+
 
 
 // Reads data block by block (by 64 bits) Reading into var "buffer"
@@ -824,7 +826,6 @@ std::string Buffer_to_string() {
 	data64 = "";
 
 	for (int i = 0; i < 64; i++) {
-		
 		data64 += buffer[i];
 	}
 	return data64;
@@ -851,7 +852,7 @@ std::string IP(std::string StrToIP){
 
 	std::string IpermutatedStr = "";
 
-	std::cout << "IP str before: " << StrToIP << std::endl;
+	//std::cout << "IP str before: " << StrToIP << std::endl;
 
 	int IP_table[64] = { 57, 49, 41, 33, 25, 17, 9, 1,
 						59,	51,	43,	35,	27,	19,	11,	3,
@@ -866,7 +867,7 @@ std::string IP(std::string StrToIP){
 		IpermutatedStr += StrToIP[IP_table[i]];
 	}
 	
-	std::cout << "IP str now: " << IpermutatedStr << std::endl;
+	//std::cout << "IP str now: " << IpermutatedStr << std::endl;
 
 	return IpermutatedStr;
 }
@@ -876,7 +877,7 @@ std::string FP(std::string StrToFP) {
 
 	std::string FpermutatedStr = "";
 
-	std::cout << "FP str before: " << StrToFP << std::endl;
+	//std::cout << "FP str before: " << StrToFP << std::endl;
 
 	int FP_table[64] = { 39, 7,	47,	15,	55,	23,	63,	31,
 						38,	6,	46,	14,	54,	22,	62,	30,
@@ -892,7 +893,7 @@ std::string FP(std::string StrToFP) {
 		FpermutatedStr += StrToFP[FP_table[i]];
 	}
 
-	std::cout << "FP str now: " << FpermutatedStr << std::endl;
+	//std::cout << "FP str now: " << FpermutatedStr << std::endl;
 
 	return FpermutatedStr;
 }
@@ -902,8 +903,12 @@ std::string FP(std::string StrToFP) {
 void Writing_Encrypted_64bit(std::string path, std::string data) {
 
 	std::ofstream File_output(path, std::ofstream::binary | std::ios_base::app); // Opening that file for writing
-	std::string writing_dat;	// Temporary variable
-	for (int i = 0; i < 8; i++)
+	std::string writing_dat = "";
+
+	int times = data.length() / 8;
+
+
+	for (int i = 0; i < times; i++)
 	{
 		for (int j = 0; j < 8; j++)
 		{
@@ -927,7 +932,7 @@ std::string F_function(std::string subkey, std::string Round_R32) {
 
 	Expansion(Round_R32);
 
-	std::cout << " SUB key= " << subkey << std::endl;
+	//std::cout << " SUB key= " << subkey << std::endl;
 
 	std::string XORoutput;
 	XORoutput = XOR_48bits(Right_48bit, subkey);
@@ -936,7 +941,7 @@ std::string F_function(std::string subkey, std::string Round_R32) {
 
 	output = Permutation(S_Box_function(XORoutput));
 	
-	std::cout << "====== F  output= " << output << std::endl;
+	//std::cout << "====== F  output= " << output << std::endl;
 
 
 	XORoutput = "";
@@ -985,6 +990,50 @@ fin.read(buffer,sizeof(buffer));//second read get the second 1024 byte
 
 
 
+std::string Check_for_pattern(std::string str_out_IP) {
+
+	int pattern = 0;
+	int for_delete = 0;
+	std::string output;
+	//completeBlockNum;
+
+	if (completeBlockNum == 0) {
+		for (int i = 1; i < 8; i++) {
+			for (int j = 0; j < 8; j++) {
+				if (str_out_IP[j + i * 8] == '1') {
+					pattern++;
+				}
+			}
+
+			if (pattern == 8) {
+
+				for_delete++;
+				pattern = 0;
+			}
+			else {
+				pattern = 0;
+			}
+		}
+
+
+		for (int i = 0; i < 8 - for_delete; i++) {
+			for (int j = 0; j < 8; j++) {
+				output += str_out_IP[j + i * 8];
+			}
+		}
+	}
+	else
+	{
+		output = str_out_IP;
+	}
+
+	return output;
+}
+
+
+
+
+
 // ================= Main processing function =====================
 
 // Inputting all valuable data for next step
@@ -1005,6 +1054,10 @@ void Hello() {
 	{
 		decryption_flag = 1;
 		std::cout << "ok, decryption soon" << std::endl;
+		Copy_in_BIN();	// Gets file and creates copy of it's bits in .txt
+		Key_Logic(); // Gets the key
+
+
 	}
 	else if (answer == 'F')	// Easter egg (why not?)
 	{
@@ -1028,7 +1081,7 @@ void Hello() {
 */
 
 
-void Main_Processing_func() {
+void Encryption() {
 
 	size = FileSize(path_Copy);
 	
@@ -1040,9 +1093,10 @@ void Main_Processing_func() {
 
 		Otput_buffer();
 
-		std::string t_str_out_IP;
-		t_str_out_IP = IP(Buffer_to_string());
-
+		std::string t_str_out_IP = "";
+		//t_str_out_IP = IP(Buffer_to_string());
+		t_str_out_IP = Buffer_to_string();
+		
 		L_and_R_divider(t_str_out_IP);
 
 
@@ -1050,24 +1104,26 @@ void Main_Processing_func() {
 
 			
 			
-			std::cout << "=== R32 = " << R32 << std::endl;
+			//std::cout << "=== R32 = " << R32 << std::endl;
 
 
 			std::string XORoutput;
 			XORoutput = XOR_32bits(L32, F_function(subkeys[round], R32));
 			L32 = XORoutput;
 
-			std::cout << "=== Round = " << round << std::endl;
+			//std::cout << "=== Round = " << round << std::endl;
 
 			L_R_switching();
 
-			std::cout << "=== After switching R32 = " << R32 << std::endl;
+			//std::cout << "=== After switching R32 = " << R32 << std::endl;
 		}
 
 		L_R_switching();
-
+		
 		std::string t_str_out_FP = "";
-		t_str_out_FP = FP(L_plus_R());
+		//t_str_out_FP = FP(L_plus_R());
+		t_str_out_FP = L_plus_R();
+
 
 		Writing_Encrypted_64bit(path_File_Save, t_str_out_FP);
 	}
@@ -1078,6 +1134,60 @@ void Main_Processing_func() {
 
 
 void Decryption() {
+
+	size = FileSize(path_Copy);
+
+	Block_Amount();
+
+	while (file_end_flag != true) {
+
+		BlockReading();
+
+		//Otput_buffer();
+
+
+		std::string t_str_out_FP = "";
+		//t_str_out_FP = FP(Buffer_to_string());
+		t_str_out_FP = Buffer_to_string();
+
+		L_and_R_divider(t_str_out_FP);
+
+		//L_R_switching();
+
+		for (int round = 0; round < 16; round++) {
+					   
+			//L_R_switching();
+			//std::cout << "=== R32 = " << R32 << std::endl;
+
+
+			std::string XORoutput;
+			XORoutput = XOR_32bits(L32, F_function(subkeys[15 - round], R32));
+			L32 = XORoutput;
+
+			//std::cout << "=== Round = " << round << std::endl;
+
+			L_R_switching();
+
+			//std::cout << "=== After switching R32 = " << R32 << std::endl;
+		}
+
+		
+		L_R_switching();
+
+
+		std::string t_str_out_IP = "";
+		//t_str_out_IP = IP(L_plus_R());
+		t_str_out_IP = L_plus_R();
+
+		std::string output = Check_for_pattern(t_str_out_IP);
+
+		std::cout << output;
+
+		Writing_Encrypted_64bit(path_File_Save, output);
+		
+	}
+
+
 
 }
 
@@ -1100,24 +1210,33 @@ int main() {
 	//key = "F1FFFF3FFAFFF5FF"; // our test key
 	
 	Hello();
-	//path_PlainText = "D:\\1.txt";
-	//Copy_in_BIN();	// Gets file and creates copy of it's bits in .txt
-	
-
 
 	Where_to_save();
 
 
 	Key_Schedule();
 
-	Main_Processing_func();
+	
+	if (decryption_flag == 1) {
+
+		Decryption();
+
+	}
+	else {
+		Encryption();
+	}
+	
+
+
+	// test
+
+
 
 
 	// end
 
 	// declaring character array 
 	char char_array[255];
-
 	// copying the contents of the 
 	// string to char array 
 	strcpy(char_array, path_Copy.c_str());
