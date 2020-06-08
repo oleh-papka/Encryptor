@@ -69,8 +69,52 @@ long int size; // Size of .bin file in bits
 double shift;
 double percentage;
 
+
 //========================================================
 //========================================================
+
+
+bool Invalid_key(std::string Key) {
+	
+	bool invalid_key_flag = false;
+
+	if (Key.find_first_not_of("abcdefABCDEF01234567890") != std::string::npos) {
+
+		invalid_key_flag = true;
+	}
+	return invalid_key_flag;
+}
+
+
+bool All_char_same(std::string Key) {
+
+	bool all_char_same_flag = false;
+
+	int n = Key.length();
+
+	for (int i = 1; i < n; i++) {
+		if (Key[i] == Key[0]) {
+			all_char_same_flag = true;
+		}
+	}
+
+	return all_char_same_flag;
+}
+
+
+bool File_exist(std::string file_name) {
+
+	bool file_exist;
+
+	std::ifstream Exist_file(file_name);
+
+	if (Exist_file) { file_exist = true; }
+	else { file_exist = false;}
+
+	Exist_file.close();
+
+	return file_exist;
+}
 
 
 void Where_to_save() {
@@ -98,22 +142,29 @@ void Copy_in_BIN (){
 	std::cout << ">> ";
 	std::cin >> path_PlainText;
 
-	path_Copy  = GetWorkingDir();
-
-	path_Copy += "Copy.txt";
-
-	std::ifstream Readfile (path_PlainText, std::ifstream::binary);
-	std::ofstream Copyfile (path_Copy, std::fstream::binary);
-
-	char c;
-	while (Readfile.get(c))
-	{
-		for (int i = 7; i >= 0; i--) // or (int i = 0; i < 8; i++)  if you want reverse bit order in bytes
-			Copyfile << ((c >> i) & 1);
+	if (!File_exist(path_PlainText)) {
+		std::cout << "===== Sorry, but there isn't such a file! =====" << std::endl;
+		Copy_in_BIN();
 	}
+	else {
 
-	Readfile.close();
-	Copyfile.close();
+		path_Copy = GetWorkingDir();
+
+		path_Copy += "Copy.txt";
+
+		std::ifstream Readfile(path_PlainText, std::ifstream::binary);
+		std::ofstream Copyfile(path_Copy, std::fstream::binary);
+
+		char c;
+		while (Readfile.get(c))
+		{
+			for (int i = 7; i >= 0; i--) // or (int i = 0; i < 8; i++)  if you want reverse bit order in bytes
+				Copyfile << ((c >> i) & 1);
+		}
+
+		Readfile.close();
+		Copyfile.close();
+	}
 }
 
 // Random key generator (Generates 64-bit HEX key)
@@ -173,19 +224,37 @@ std::string HEX2BIN(std::string str) {
 		case 'A':
 			bin_key += "1010";
 			break;
+		case 'a':
+			bin_key += "1010";
+			break;
 		case 'B':
+			bin_key += "1011";
+			break;
+		case 'b':
 			bin_key += "1011";
 			break;
 		case 'C':
 			bin_key += "1100";
 			break;
+		case 'c':
+			bin_key += "1100";
+			break;
 		case 'D':
+			bin_key += "1101";
+			break;
+		case 'd':
 			bin_key += "1101";
 			break;
 		case 'E':
 			bin_key += "1110";
 			break;
+		case 'e':
+			bin_key += "1110";
+			break;
 		case 'F':
+			bin_key += "1111";
+			break;
+		case 'f':
 			bin_key += "1111";
 			break;
 
@@ -200,12 +269,22 @@ std::string HEX2BIN(std::string str) {
 
 // Asks for key
 void Key_entering() {
-	std::cout << "==== Ok, enter your HEX (16 character) key ====" << std::endl;
+
+	std::cout << "====== Enter your HEX (16 character) key ======" << std::endl;
 	std::cout << ">> ";
 	std::cin >> key;
 	
+
 	if (key.length() != 16) {
-		std::cout << "=== Sorry, but ->" << std::endl;
+		std::cout << "=== Sorry, but key must be 16 character ->" << std::endl;
+		Key_entering();
+	}
+	if (Invalid_key(key)) {
+		std::cout << "=== Sorry, but you used invalid character(s) ->" << std::endl;
+		Key_entering();
+	} 
+	if (All_char_same(key)) {
+		std::cout << "=== Sorry, but your key too weak ->" << std::endl;
 		Key_entering();
 	}
 }
@@ -224,15 +303,8 @@ void Key_generating() {
 	}
 	else if (answer == 'n')
 	{
-		std::string entered_key;
-		std::cout << "========= Then create it use HEX base =========\n== 16 numbers, other inputs will be ignored! ==" << std::endl;
+		Key_entering();
 
-		while (entered_key.length() != 16 ) {
-			std::cout << ">> ";
-			std::cin >> entered_key;
-		}
-
-		key = entered_key;
 		std::cout << "======= Your key is: [" << key << "] =======" << std::endl;
 	}
 	else
@@ -831,21 +903,6 @@ std::string Buffer_to_string() {
 	return data64;
 }
 
-//========== for debuging =========
-
-
-void Otput_buffer() {
-	std::cout << "Buffer now: ";
-	for (int i = 0; i < 64; i++){
-
-		std::cout << buffer[i];
-	}
-	std::cout << "\n";
-}
-
-
-//========== for debuging =========
-
 
 // Initial Permutation
 std::string IP(std::string StrToIP){
@@ -1163,6 +1220,7 @@ void Decryption() {
 	}
 
 }
+
 
 
 //========================================================
