@@ -2,12 +2,8 @@
 #include <iostream>
 #include <fstream>
 #include <cstdio>
-#include <Windows.h>
-#include <windows.h>
 #include <Shlwapi.h>
 #include <string>
-#include <sstream>
-#include <cstring>
 #include <bitset>
 #include <random>
 #include <cmath>
@@ -74,6 +70,7 @@ double percentage;
 //========================================================
 
 
+// Check if there is nothing else in our key
 bool Invalid_key(std::string Key) {
 	
 	bool invalid_key_flag = false;
@@ -86,22 +83,28 @@ bool Invalid_key(std::string Key) {
 }
 
 
+// Check if all characters the same 
 bool All_char_same(std::string Key) {
 
 	bool all_char_same_flag = false;
 
-	int n = Key.length();
+	int n = 0;
 
-	for (int i = 1; i < n; i++) {
+	for (int i = 1; i < 16; i++) {
 		if (Key[i] == Key[0]) {
-			all_char_same_flag = true;
+			n++;
 		}
+	}
+
+	if (n == 15) {
+		all_char_same_flag = true;
 	}
 
 	return all_char_same_flag;
 }
 
 
+// If our asking file exists
 bool File_exist(std::string file_name) {
 
 	bool file_exist;
@@ -117,6 +120,7 @@ bool File_exist(std::string file_name) {
 }
 
 
+// Asks where to save file
 void Where_to_save() {
 
 	std::cout << "==== Please, enter path where to save file ====" << std::endl;
@@ -166,6 +170,7 @@ void Copy_in_BIN (){
 		Copyfile.close();
 	}
 }
+
 
 // Random key generator (Generates 64-bit HEX key)
 void Key_generator(){
@@ -340,8 +345,6 @@ void Key_Logic() {
 // Permutated Choice 1 from 64 to 56 bits
 std::string PC_1(std::string Str64bit, std::string Str56bit) {
 
-	//std::cout << "Key before: " << Str64bit << std::endl;
-
 	int PC1_table[56] = { 56, 48, 40, 32, 24, 16, 8,
 						 0, 57, 49, 41, 33, 25, 17,
 						 9, 1, 58, 50, 42, 34, 26,
@@ -352,29 +355,9 @@ std::string PC_1(std::string Str64bit, std::string Str56bit) {
 						 20, 12, 4, 27, 19, 11, 3 };
 
 
-
 	for (int i = 0; i < 56; i++) {
 		Str56bit += Str64bit[PC1_table[i]];
 	}
-
-
-	//std::cout << "PC1 key now: " << Str56bit << std::endl;
-
-
-
-
-	/*
-	for (int i = 0; i < 64; i++)
-	{
-		if ((i + 1) % 8 == 0) {
-		}
-		else {
-			Str56bit += Str64bit[i];
-		}
-	}
-	*/
-
-
 
 	return Str56bit;
 }
@@ -382,9 +365,6 @@ std::string PC_1(std::string Str64bit, std::string Str56bit) {
 
 // Permutated Choice 2 from 56 to 48 bits
 std::string PC_2(std::string Str56bit, std::string Str48bit) {
-
-
-	//std::cout << "Key before: " << Str56bit << std::endl;
 
 	int PC2_table[48] = {	13, 16, 10, 23, 0, 4,
 							2, 27, 14, 5, 20, 9,
@@ -400,23 +380,6 @@ std::string PC_2(std::string Str56bit, std::string Str48bit) {
 	for (int i = 0; i < 48; i++) {
 		Str48bit += Str56bit[PC2_table[i]];
 	}
-
-
-	//std::cout << "PC2 key now: " << Str48bit << std::endl;
-
-
-
-
-	/*
-	for (int i = 0; i < 56; i++)
-	{
-		if ((i+1)%8 == 0 || i == 0) {
-		}
-		else {
-			Str48bit += Str56bit[i];
-		}
-	}
-	*/
 
 	return Str48bit;
 }
@@ -518,8 +481,6 @@ void L_R_switching() {
 // Expansion Box
 void Expansion(std::string Right_32bit) {
 
-	//std::cout << "Before Expansion: " << Right_32bit << std::endl;
-
 	int expansionTable[48] ={31, 0, 1, 2, 3, 4, 3, 4,
 							5, 6, 7, 8, 9, 8, 9, 10,
 							11, 12, 11, 12, 13, 14, 15, 16,
@@ -531,7 +492,6 @@ void Expansion(std::string Right_32bit) {
 		Right_48bit += Right_32bit[expansionTable[i]];
 	}
 
-	//std::cout << "After Expansion: " << Right_48bit << std::endl;
 }
 
 
@@ -575,11 +535,9 @@ std::string XOR_32bits(std::string L_32bit, std::string F_output) {
 	L_32bit = "";
 	L_32bit = temp_string;
 
-	//std::cout << "LOL this test R32bit block = " << R_32bit << std::endl;
 
 	return L_32bit;
 }
-
 
 
 // Converting decimal to binary	
@@ -743,7 +701,6 @@ std::string S_Box_function(std::string R_48bit) {
 		str_6_bit = "";
 	}
 
-	 
 	return R_32bit;
 }
 
@@ -759,11 +716,8 @@ std::string Permutation(std::string str_32bit) {
 								  18, 12, 29,  5, 21, 10,  3, 24 };
 
 	for (int i = 0; i < 32; i++) {
-
 		t_str += str_32bit[Permutation_table[i]];
 	}
-
-
 
 	return t_str;
 }
@@ -772,12 +726,9 @@ std::string Permutation(std::string str_32bit) {
 // Keyschedule
 void Key_Schedule() {
 
-
 	std::string HEX_OUT;
 	HEX_OUT = HEX2BIN(key); // Now key is in BIN
 	bin_key = HEX_OUT;
-
-	//std::cout << "+++++++++++++++++++++++++++ hey bitch key: " << bin_key << std::endl;
 
 
 	key56bit = PC_1(bin_key, key56bit);
@@ -823,8 +774,6 @@ void Block_Amount() {
 
 	if (size%64 == 0) {
 		completeBlockNum = size / 64;
-
-		//std::cout << "Complete blocks = " << completeBlockNum << std::endl;
 	}
 	else {
 		if (size > 64) {
@@ -835,17 +784,11 @@ void Block_Amount() {
 		}
 		
 		uncompleteBlock_flag = true;
-		//std::cout << "Uncomplete block bits = " << uncompleteBlockNum << std::endl;
-
 		completeBlockNum = size / 64;
-		//std::cout << "Complete blocks = " << completeBlockNum << std::endl;
 	}
 
 	shift = 100.0 / (completeBlockNum + uncompleteBlock_flag);
-
-	//std::string s = std::to_string(42);
-
-	shift = std::round(shift * 10000) / 10000;
+	shift = std::round(shift * 10000) / 10000; // 4 digits precision
 }
 
 
@@ -858,8 +801,6 @@ void BlockReading() {
 		DataReading.seekg(position);
 
 		if (completeBlockNum == 0 && uncompleteBlock_flag == true) { // we reached last uncomplete block
-
-			//std::cout << "Reading with pattering" << std::endl; // fpr debugging
 
 			DataReading.read(buffer, 64 - uncompleteBlockNum);	// Reads all data that lasts
 
@@ -909,8 +850,6 @@ std::string IP(std::string StrToIP){
 
 	std::string IpermutatedStr = "";
 
-	//std::cout << "IP str before: " << StrToIP << std::endl;
-
 	int IP_table[64] = { 57, 49, 41, 33, 25, 17, 9, 1,
 						59,	51,	43,	35,	27,	19,	11,	3,
 						61, 53,	45,	37,	29,	21,	13,	5,
@@ -923,8 +862,6 @@ std::string IP(std::string StrToIP){
 	for (int i = 0; i < 64; i++) {
 		IpermutatedStr += StrToIP[IP_table[i]];
 	}
-	
-	//std::cout << "IP str now: " << IpermutatedStr << std::endl;
 
 	return IpermutatedStr;
 }
@@ -933,8 +870,6 @@ std::string IP(std::string StrToIP){
 std::string FP(std::string StrToFP) {
 
 	std::string FpermutatedStr = "";
-
-	//std::cout << "FP str before: " << StrToFP << std::endl;
 
 	int FP_table[64] = { 39, 7,	47,	15,	55,	23,	63,	31,
 						38,	6,	46,	14,	54,	22,	62,	30,
@@ -949,8 +884,6 @@ std::string FP(std::string StrToFP) {
 	for (int i = 0; i < 64; i++) {
 		FpermutatedStr += StrToFP[FP_table[i]];
 	}
-
-	//std::cout << "FP str now: " << FpermutatedStr << std::endl;
 
 	return FpermutatedStr;
 }
@@ -975,8 +908,6 @@ void Writing_Encrypted_64bit(std::string path, std::string data) {
 
 		File_output << static_cast<uint_fast8_t>(std::bitset<8>(writing_dat).to_ulong());
 
-		//std::cout << "Info: " << writing_dat << std::endl;
-
 		writing_dat = "";
 	}
 
@@ -989,17 +920,12 @@ std::string F_function(std::string subkey, std::string Round_R32) {
 
 	Expansion(Round_R32);
 
-	//std::cout << " SUB key= " << subkey << std::endl;
-
 	std::string XORoutput;
 	XORoutput = XOR_48bits(Right_48bit, subkey);
 
 	std::string output;
 
 	output = Permutation(S_Box_function(XORoutput));
-	
-	//std::cout << "====== F  output= " << output << std::endl;
-
 
 	XORoutput = "";
 	Right_48bit = "";
@@ -1013,7 +939,6 @@ std::string Check_for_pattern(std::string str_out_IP) {
 	int pattern = 0;
 	int for_delete = 0;
 	std::string output;
-	//completeBlockNum;
 
 	if (completeBlockNum == 0) {
 		for (int i = 1; i < 8; i++) {
@@ -1033,7 +958,6 @@ std::string Check_for_pattern(std::string str_out_IP) {
 			}
 		}
 
-
 		for (int i = 0; i < 8 - for_delete; i++) {
 			for (int j = 0; j < 8; j++) {
 				output += str_out_IP[j + i * 8];
@@ -1052,6 +976,8 @@ std::string Check_for_pattern(std::string str_out_IP) {
 
 // ================= Main processing function =====================
 
+
+// Showing Progress in percents
 void Progress_Bar() {
 
 	int progr_bar = 30;
@@ -1090,14 +1016,14 @@ void Hello() {
 	if (answer == 'e')
 	{
 		encryption_flag = 1;
-		Copy_in_BIN();	// Gets file and creates copy of it's bits in .txt
-		Key_Logic(); // Gets the key
+		Copy_in_BIN();
+		Key_Logic();
 	}
 	else if (answer == 'd')
 	{
 		decryption_flag = 1;
-		Copy_in_BIN();	// Gets file and creates copy of it's bits in .txt
-		Key_Logic(); // Gets the key
+		Copy_in_BIN();
+		Key_entering();
 
 
 	}
@@ -1124,8 +1050,6 @@ void Encryption() {
 		
 		BlockReading();
 
-		//Otput_buffer();
-
 		std::string t_str_out_IP = "";
 		t_str_out_IP = IP(Buffer_to_string());
 		
@@ -1134,20 +1058,12 @@ void Encryption() {
 
 		for (int round = 0; round < 16; round++) {
 
-			
-			
-			//std::cout << "=== R32 = " << R32 << std::endl;
-
 
 			std::string XORoutput;
 			XORoutput = XOR_32bits(L32, F_function(subkeys[round], R32));
 			L32 = XORoutput;
 
-			//std::cout << "=== Round = " << round << std::endl;
-
 			L_R_switching();
-
-			//std::cout << "=== After switching R32 = " << R32 << std::endl;
 		}
 
 		L_R_switching();
@@ -1175,41 +1091,26 @@ void Decryption() {
 
 		BlockReading();
 
-		//Otput_buffer();
-
-
 		std::string t_str_out_IP = "";
 		t_str_out_IP = IP(Buffer_to_string());
 
 
 		L_and_R_divider(t_str_out_IP);
 
-		//L_R_switching();
-
 		for (int round = 0; round < 16; round++) {
 					   
-			//L_R_switching();
-			//std::cout << "=== R32 = " << R32 << std::endl;
-
-
 			std::string XORoutput;
 			XORoutput = XOR_32bits(L32, F_function(subkeys[15 - round], R32));
 			L32 = XORoutput;
 
-			//std::cout << "=== Round = " << round << std::endl;
-
 			L_R_switching();
-
-			//std::cout << "=== After switching R32 = " << R32 << std::endl;
 		}
 
 		
 		L_R_switching();
 
-
 		std::string t_str_out_FP = "";
 		t_str_out_FP = FP(L_plus_R());
-
 
 		std::string output = Check_for_pattern(t_str_out_FP);
 
@@ -1222,10 +1123,7 @@ void Decryption() {
 }
 
 
-
 //========================================================
-//========================================================
-
 
 int main() {
 
@@ -1234,7 +1132,6 @@ int main() {
 	SetConsoleTextAttribute(hConsole, 10);
 
 	std::cout << "=================== Oh, hi! ===================" << std::endl;
-
 
 	Hello();
 
@@ -1253,13 +1150,12 @@ int main() {
 		Encryption();
 		std::cout << std::endl;
 	}
-	
 
 	// declaring character array 
 	char char_array[255];
-	// copying the contents of the 
-	// string to char array 
+	// copying the contents of the string to char array 
 	strcpy(char_array, path_Copy.c_str());
+	remove(char_array);
 
 	std::cout << "==================== Done! ====================" << std::endl;
 	std::cout << std::endl;
@@ -1267,5 +1163,4 @@ int main() {
 	return 0;
 }
 
-//========================================================
 //========================================================
