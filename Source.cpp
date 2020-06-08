@@ -10,6 +10,7 @@
 #include <cstring>
 #include <bitset>
 #include <random>
+#include <cmath>
 
 #pragma comment(lib, "shlwapi.lib")
 #pragma warning(disable : 4996)
@@ -17,6 +18,7 @@
 //========================================================
 //						Variables
 //========================================================
+
 
 bool encryption_flag = 0;
 bool decryption_flag = 0;
@@ -64,20 +66,17 @@ bool uncompleteBlock_flag = false;
 
 long int size; // Size of .bin file in bits
 
-//========================================================
-//========================================================
-
-
+double shift;
+double percentage;
 
 //========================================================
-//						Functions
 //========================================================
-
 
 
 void Where_to_save() {
 
-	std::cout << "Please enter path for encrypted file: ";
+	std::cout << "==== Please, enter path where to save file ====" << std::endl;
+	std::cout << ">> ";
 	std::cin >> path_File_Save;
 
 }
@@ -95,7 +94,8 @@ std::string GetWorkingDir() {
 // Creates a copy of the PlainText in Copy.txt file to process it
 void Copy_in_BIN (){
 
-	std::cout << "Please enter path to the file for encryption (PlainText): ";
+	std::cout << "== Please, enter path to file for processing ==" << std::endl;
+	std::cout << ">> ";
 	std::cin >> path_PlainText;
 
 	path_Copy  = GetWorkingDir();
@@ -105,8 +105,6 @@ void Copy_in_BIN (){
 	std::ifstream Readfile (path_PlainText, std::ifstream::binary);
 	std::ofstream Copyfile (path_Copy, std::fstream::binary);
 
-
-	std::cout << "Reading bits... " << std::endl;
 	char c;
 	while (Readfile.get(c))
 	{
@@ -131,7 +129,7 @@ void Key_generator(){
 		key += hex_numbers[dist6(rng)];
 	}
 
-	std::cout << "Key is : " << key << std::endl;
+	std::cout << "=== Your key is: " << key << std::endl;
 }
 
 
@@ -202,11 +200,12 @@ std::string HEX2BIN(std::string str) {
 
 // Asks for key
 void Key_entering() {
-	std::cout << "Ok enter your HEX (16 character):" << std::endl;
+	std::cout << "==== Ok, enter your HEX (16 character) key ====" << std::endl;
+	std::cout << ">> ";
 	std::cin >> key;
 	
 	if (key.length() != 16) {
-		std::cout << "Sorry, but ->" << std::endl;
+		std::cout << "=== Sorry, but ->" << std::endl;
 		Key_entering();
 	}
 }
@@ -216,30 +215,29 @@ void Key_entering() {
 void Key_generating() {
 	char answer;
 
-	std::cout << "Should we generate it? [y] - for yes, [n] - for no" << std::endl;
+	std::cout << "======= Generate it? [y] - yes, [n] - no ======" << std::endl;
+	std::cout << ">> ";
 	std::cin >> answer; // Get the answer
 
 	if (answer == 'y') {
 		Key_generator();
-		std::cout << "Ok, we created a key for you:" << key << std::endl;
 	}
 	else if (answer == 'n')
 	{
 		std::string entered_key;
-		std::cout << "Then create it by yourself use HEX base \n\t (16 numbers only, other inputs will be ignored)" << std::endl;
+		std::cout << "========= Then create it use HEX base =========\n== 16 numbers, other inputs will be ignored! ==" << std::endl;
 
 		while (entered_key.length() != 16 ) {
-			std::cout << "Enter your key use HEX base (16 numbers only): ";
+			std::cout << ">> ";
 			std::cin >> entered_key;
-			std::cout << "Entered: " << entered_key << std::endl;
 		}
 
 		key = entered_key;
-		std::cout << "Your key is: " << key << std::endl;
+		std::cout << "======= Your key is: [" << key << "] =======" << std::endl;
 	}
 	else
 	{
-		std::cout << "Sorry, but ->" << std::endl;
+		std::cout << "=== Sorry, but ->" << std::endl;
 		Key_generating();
 	}
 }
@@ -250,7 +248,8 @@ void Key_Logic() {
 
 	char answer;	// Does user have a key
 	
-	std::cout << "Do you have key? [y] - for yes, [n] - for no" << std::endl;
+	std::cout << "===== Do You have key? [y] - yes, [n] - no ====" << std::endl;
+	std::cout << ">> ";
 	std::cin >> answer; // Get the answer
 
 	if (answer == 'y') {
@@ -260,7 +259,7 @@ void Key_Logic() {
 		Key_generating();
 	}
 	else {
-		std::cout << "Sorry, but ->" << std::endl;
+		std::cout << "=== Sorry, but ->" << std::endl;
 		Key_Logic();
 	}
 }
@@ -331,7 +330,7 @@ std::string PC_2(std::string Str56bit, std::string Str48bit) {
 	}
 
 
-	std::cout << "PC2 key now: " << Str48bit << std::endl;
+	//std::cout << "PC2 key now: " << Str48bit << std::endl;
 
 
 
@@ -725,7 +724,7 @@ void Key_Schedule() {
 
 		key48bit = "";
 	}
-	   	 
+	
 }
 
 
@@ -753,7 +752,7 @@ void Block_Amount() {
 	if (size%64 == 0) {
 		completeBlockNum = size / 64;
 
-		std::cout << "Complete blocks = " << completeBlockNum << std::endl;
+		//std::cout << "Complete blocks = " << completeBlockNum << std::endl;
 	}
 	else {
 		if (size > 64) {
@@ -764,30 +763,31 @@ void Block_Amount() {
 		}
 		
 		uncompleteBlock_flag = true;
-		std::cout << "Uncomplete block bits = " << uncompleteBlockNum << std::endl;
+		//std::cout << "Uncomplete block bits = " << uncompleteBlockNum << std::endl;
 
 		completeBlockNum = size / 64;
-		std::cout << "Complete blocks = " << completeBlockNum << std::endl;
+		//std::cout << "Complete blocks = " << completeBlockNum << std::endl;
 	}
+
+	shift = 100.0 / (completeBlockNum + uncompleteBlock_flag);
+
+	//std::string s = std::to_string(42);
+
+	shift = std::round(shift * 10000) / 10000;
 }
-
-
 
 
 // Reads data block by block (by 64 bits) Reading into var "buffer"
 void BlockReading() {
 	
-	if (file_end_flag == true) {
-		std::cout << "File already read!" << std::endl;
-	}
-	else{
+	if (file_end_flag != true) {
 		std::ifstream DataReading(path_Copy, std::ios::in | std::ios::binary);	// opening our file for reading
 
 		DataReading.seekg(position);
 
 		if (completeBlockNum == 0 && uncompleteBlock_flag == true) { // we reached last uncomplete block
 
-			std::cout << "Reading with pattering" << std::endl; // fpr debugging
+			//std::cout << "Reading with pattering" << std::endl; // fpr debugging
 
 			DataReading.read(buffer, 64 - uncompleteBlockNum);	// Reads all data that lasts
 
@@ -918,7 +918,7 @@ void Writing_Encrypted_64bit(std::string path, std::string data) {
 
 		File_output << static_cast<uint_fast8_t>(std::bitset<8>(writing_dat).to_ulong());
 
-		std::cout << "Info: " << writing_dat << std::endl;
+		//std::cout << "Info: " << writing_dat << std::endl;
 
 		writing_dat = "";
 	}
@@ -949,45 +949,6 @@ std::string F_function(std::string subkey, std::string Round_R32) {
 
 	return  output;
 }
-
-
-/*
-	// allocate memory:
-	char* buffer = new char[length];
-
-	// read data as a block:
-	is.read(buffer, length);
-
-	is.close();
-
-	// print content:
-	std::cout.write(buffer, length);
-
-	delete[] buffer;
-
-
-
-*/
-
-
-/* For .bin reading 
-
-	char buffer[64];
-	std::ifstream PlainTextBIN(path_Copy, std::ifstream::binary);
-	myFile.read(buffer, 64);
-
-
-	std::ifstream fin("C:\\file.txt");
-char buffer[1024]; //I prefer array more than vector for such implementation
-
-fin.read(buffer,sizeof(buffer));//first read get the first 1024 byte
-
-fin.read(buffer,sizeof(buffer));//second read get the second 1024 byte
-  
-
-
-*/
-
 
 
 std::string Check_for_pattern(std::string str_out_IP) {
@@ -1032,28 +993,52 @@ std::string Check_for_pattern(std::string str_out_IP) {
 
 
 
-
-
 // ================= Main processing function =====================
+
+void Progress_Bar() {
+
+	int progr_bar = 30;
+	int one_filling_amount = 100 / progr_bar;
+
+	percentage += shift;
+	int filling = percentage / (100.0 / progr_bar);
+
+	if (std::round(percentage) == 100) { filling = progr_bar; }
+
+	if (percentage == 0 || 100/percentage >= 1) {
+
+		std::cout << "Progress: " << std::round(percentage) << "% [";
+		for (int i = 0; i < progr_bar; i++) {
+			if (filling != 0) {
+				std::cout << "#";
+				filling--;
+			}
+			else {
+				std::cout << ".";
+			}
+		}
+		std::cout << "]\r";
+	}
+}
+
 
 // Inputting all valuable data for next step
 void Hello() {
 
-	std::cout << "For encryption enter [e] , for decryption [d]" << std::endl;
+	std::cout << "===== Encryption - [e] , decryption - [d] =====" << std::endl;
 	char answer;
+	std::cout << ">> ";
 	std::cin >> answer; // Get the answer
 
 	if (answer == 'e')
 	{
 		encryption_flag = 1;
-		std::cout << "ok, encryption" << std::endl;
 		Copy_in_BIN();	// Gets file and creates copy of it's bits in .txt
 		Key_Logic(); // Gets the key
 	}
 	else if (answer == 'd')
 	{
 		decryption_flag = 1;
-		std::cout << "ok, decryption soon" << std::endl;
 		Copy_in_BIN();	// Gets file and creates copy of it's bits in .txt
 		Key_Logic(); // Gets the key
 
@@ -1061,24 +1046,15 @@ void Hello() {
 	}
 	else if (answer == 'F')	// Easter egg (why not?)
 	{
-		std::cout << "Thanks, you paid respect" << std::endl;
+		std::cout << "========== Thanks, You paid respect! ==========" << std::endl;
 		Hello();
 	}
 	else
 	{
-		std::cout << "Sorry, but ->" << std::endl;
+		std::cout << "=== Sorry, but ->" << std::endl;
 		Hello();
 	}
 }
-
-
-/*
-
- there we should put 
-	Where_to_save();
-	Key_Schedule();
-
-*/
 
 
 void Encryption() {
@@ -1091,11 +1067,10 @@ void Encryption() {
 		
 		BlockReading();
 
-		Otput_buffer();
+		//Otput_buffer();
 
 		std::string t_str_out_IP = "";
-		//t_str_out_IP = IP(Buffer_to_string());
-		t_str_out_IP = Buffer_to_string();
+		t_str_out_IP = IP(Buffer_to_string());
 		
 		L_and_R_divider(t_str_out_IP);
 
@@ -1121,16 +1096,16 @@ void Encryption() {
 		L_R_switching();
 		
 		std::string t_str_out_FP = "";
-		//t_str_out_FP = FP(L_plus_R());
-		t_str_out_FP = L_plus_R();
+		t_str_out_FP = FP(L_plus_R());
 
 
 		Writing_Encrypted_64bit(path_File_Save, t_str_out_FP);
+
+		Progress_Bar();
 	}
 	
-
+	
 }
-
 
 
 void Decryption() {
@@ -1146,11 +1121,11 @@ void Decryption() {
 		//Otput_buffer();
 
 
-		std::string t_str_out_FP = "";
-		//t_str_out_FP = FP(Buffer_to_string());
-		t_str_out_FP = Buffer_to_string();
+		std::string t_str_out_IP = "";
+		t_str_out_IP = IP(Buffer_to_string());
 
-		L_and_R_divider(t_str_out_FP);
+
+		L_and_R_divider(t_str_out_IP);
 
 		//L_R_switching();
 
@@ -1175,65 +1150,52 @@ void Decryption() {
 		L_R_switching();
 
 
-		std::string t_str_out_IP = "";
-		//t_str_out_IP = IP(L_plus_R());
-		t_str_out_IP = L_plus_R();
+		std::string t_str_out_FP = "";
+		t_str_out_FP = FP(L_plus_R());
 
-		std::string output = Check_for_pattern(t_str_out_IP);
 
-		std::cout << output;
+		std::string output = Check_for_pattern(t_str_out_FP);
+
 
 		Writing_Encrypted_64bit(path_File_Save, output);
-		
+
+		Progress_Bar();
 	}
-
-
 
 }
 
 
-
 //========================================================
 //========================================================
 
-
-
-
-//========================================================
-//						 Main
-//========================================================
 
 int main() {
 
-	std::cout << "======= Oh, hi! =======" << std::endl;
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	// you can loop k higher to see more color choices
+	SetConsoleTextAttribute(hConsole, 10);
 
-	//key = "F1FFFF3FFAFFF5FF"; // our test key
-	
+	std::cout << "=================== Oh, hi! ===================" << std::endl;
+
+
 	Hello();
 
 	Where_to_save();
 
-
 	Key_Schedule();
-
 	
+	std::cout << "===== Hold on one moment, data processing =====" << std::endl;
+	std::cout << std::endl;
+
 	if (decryption_flag == 1) {
-
 		Decryption();
-
+		std::cout << std::endl;
 	}
 	else {
 		Encryption();
+		std::cout << std::endl;
 	}
 	
-
-
-	// test
-
-
-
-
-	// end
 
 	// declaring character array 
 	char char_array[255];
@@ -1241,9 +1203,8 @@ int main() {
 	// string to char array 
 	strcpy(char_array, path_Copy.c_str());
 
-	if (remove(char_array) == 0) {
-		printf("Deleted successfully");
-	}
+	std::cout << "==================== Done! ====================" << std::endl;
+	std::cout << std::endl;
 
 	return 0;
 }
