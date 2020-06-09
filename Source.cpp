@@ -1160,6 +1160,8 @@ int main() {
 	std::cout << "==================== Done! ====================" << std::endl;
 	std::cout << std::endl;
 
+
+	system("pause");
 	return 0;
 }
 
