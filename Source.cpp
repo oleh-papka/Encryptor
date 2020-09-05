@@ -72,11 +72,9 @@ double percentage;
 
 // Check if there is nothing else in our key
 bool Invalid_key(std::string Key) {
-	
 	bool invalid_key_flag = false;
 
 	if (Key.find_first_not_of("abcdefABCDEF01234567890") != std::string::npos) {
-
 		invalid_key_flag = true;
 	}
 	return invalid_key_flag;
@@ -85,9 +83,7 @@ bool Invalid_key(std::string Key) {
 
 // Check if all characters the same 
 bool All_char_same(std::string Key) {
-
 	bool all_char_same_flag = false;
-
 	int n = 0;
 
 	for (int i = 1; i < 16; i++) {
@@ -106,13 +102,16 @@ bool All_char_same(std::string Key) {
 
 // If our asking file exists
 bool File_exist(std::string file_name) {
-
 	bool file_exist;
 
 	std::ifstream Exist_file(file_name);
 
-	if (Exist_file) { file_exist = true; }
-	else { file_exist = false;}
+	if (Exist_file) {
+		file_exist = true;
+	}
+	else {
+		file_exist = false;
+	}
 
 	Exist_file.close();
 
@@ -122,11 +121,9 @@ bool File_exist(std::string file_name) {
 
 // Asks where to save file
 void Where_to_save() {
-
 	std::cout << "==== Please, enter path where to save file ====" << std::endl;
 	std::cout << ">> ";
 	std::cin >> path_File_Save;
-
 }
 
 
@@ -141,61 +138,57 @@ std::string GetWorkingDir() {
 
 // Creates a copy of the PlainText in Copy.txt file to process it
 void Copy_in_BIN (){
+	boolean quit = false;
 
-	std::cout << "== Please, enter path to file for processing ==" << std::endl;
-	std::cout << ">> ";
-	std::cin >> path_PlainText;
+	while(!quit) {
+		std::cout << "== Please, enter path to file for processing ==" << std::endl;
+		std::cout << ">> ";
+		std::cin >> path_PlainText;
 
-	if (!File_exist(path_PlainText)) {
-		std::cout << "===== Sorry, but there isn't such a file! =====" << std::endl;
-		Copy_in_BIN();
-	}
-	else {
-
-		path_Copy = GetWorkingDir();
-
-		path_Copy += "Copy.txt";
-
-		std::ifstream Readfile(path_PlainText, std::ifstream::binary);
-		std::ofstream Copyfile(path_Copy, std::fstream::binary);
-
-		char c;
-		while (Readfile.get(c))
-		{
-			for (int i = 7; i >= 0; i--) // or (int i = 0; i < 8; i++)  if you want reverse bit order in bytes
-				Copyfile << ((c >> i) & 1);
+		if (!File_exist(path_PlainText)) {
+			std::cout << "===== Sorry, but there isn't such a file! =====" << std::endl;
 		}
+		else {
+			path_Copy = GetWorkingDir();
+			path_Copy += "Copy.txt";
 
-		Readfile.close();
-		Copyfile.close();
-	}
+			std::ifstream Readfile(path_PlainText, std::ifstream::binary);
+			std::ofstream Copyfile(path_Copy, std::fstream::binary);
+
+			char c;
+			while (Readfile.get(c)) {
+				for (int i = 7; i >= 0; i--) {
+					Copyfile << ((c >> i) & 1);
+				}
+			}
+
+			Readfile.close();
+			Copyfile.close();
+
+			quit = true;
+		}
+	}	
 }
 
 
 // Random key generator (Generates 64-bit HEX key)
 void Key_generator(){
-
 	char hex_numbers[] = "0123456789ABCDEF";	// all numbers of hex base system to make HEX key
 
 	std::random_device dev;
 	std::mt19937 rng(dev());
 	std::uniform_int_distribution<std::mt19937::result_type> dist6(0, 15); // distribution in range [1, 16]
 
-	for (int i = 0; i < 16; i++){
+	for (int i = 0; i < 16; i++) {
 		key += hex_numbers[dist6(rng)];
 	}
-
-	std::cout << "=== Your key is: " << key << std::endl;
 }
 
 
 // Converts HEX string to "0" and "1"
 std::string HEX2BIN(std::string str) {
-
-	for (int i = 0; i < str.length(); i++)
-	{
-		switch (str[i])
-		{
+	for (int i = 0; i < str.length(); i++) {
+		switch (str[i])	{
 		case '0':
 			bin_key += "0000";
 			break;
@@ -274,77 +267,83 @@ std::string HEX2BIN(std::string str) {
 
 // Asks for key
 void Key_entering() {
+	boolean quit = false;
 
-	std::cout << "====== Enter your HEX (16 character) key ======" << std::endl;
-	std::cout << ">> ";
-	std::cin >> key;
-	
+	while (!quit) {
+		std::cout << "====== Enter your HEX (16 character) key ======" << std::endl;
+		std::cout << ">> ";
+		std::cin >> key;
 
-	if (key.length() != 16) {
-		std::cout << "=== Sorry, but key must be 16 character ->" << std::endl;
-		Key_entering();
-	}
-	if (Invalid_key(key)) {
-		std::cout << "=== Sorry, but you used invalid character(s) ->" << std::endl;
-		Key_entering();
-	} 
-	if (All_char_same(key)) {
-		std::cout << "=== Sorry, but your key too weak ->" << std::endl;
-		Key_entering();
-	}
+		if (key.length() != 16) {
+			std::cout << "=== Sorry, but key must be 16 character ->" << std::endl;
+		}
+		if (Invalid_key(key)) {
+			std::cout << "=== Sorry, but you used invalid character(s) ->" << std::endl;
+		}
+		if (All_char_same(key)) {
+			std::cout << "=== Sorry, but your key too weak ->" << std::endl;
+		}
+		else {
+			quit = true;
+		}
+	}	
 }
 
 
 // Should we generate a key for you if you dont have it
 void Key_generating() {
-	char answer;
+	std::string answer;
+	boolean quit = false;
 
-	std::cout << "======= Generate it? [y] - yes, [n] - no ======" << std::endl;
-	std::cout << ">> ";
-	std::cin >> answer; // Get the answer
+	while (!quit) {
+		std::cout << "====== Generate a key? [y] - yes, [n] - no =====" << std::endl;
+		std::cout << ">> ";
+		std::cin >> answer; // Get the answer
 
-	if (answer == 'y') {
-		Key_generator();
-	}
-	else if (answer == 'n')
-	{
-		Key_entering();
-
-		std::cout << "======= Your key is: [" << key << "] =======" << std::endl;
-	}
-	else
-	{
-		std::cout << "=== Sorry, but ->" << std::endl;
-		Key_generating();
-	}
+		if (answer == "y") {
+			Key_generator();
+			std::cout << "======= Your key is: [" << key << "] =======" << std::endl;
+			quit = true;
+		}
+		else if (answer == "n") {
+			Key_entering();
+			std::cout << "======= Your key is: [" << key << "] =======" << std::endl;
+			quit = true;
+		}
+		else {
+			std::cout << "=== Sorry, but ->" << std::endl;
+		}
+	}	
 }
 
 
 // Asking for key and what to do
 void Key_Logic() {
+	std::string answer;	// Does user have a key
+	boolean quit = false;
 
-	char answer;	// Does user have a key
-	
-	std::cout << "===== Do You have key? [y] - yes, [n] - no ====" << std::endl;
-	std::cout << ">> ";
-	std::cin >> answer; // Get the answer
+	while(!quit) {
+		std::cout << "===== Do You have key? [y] - yes, [n] - no ====" << std::endl;
+		std::cout << ">> ";
+		std::cin >> answer; // Get the answer
 
-	if (answer == 'y') {
-		Key_entering();
-	}
-	else if (answer == 'n') {
-		Key_generating();
-	}
-	else {
-		std::cout << "=== Sorry, but ->" << std::endl;
-		Key_Logic();
+		if (answer == "y") {
+			Key_entering();
+			quit = true;
+		}
+		else if (answer == "n") {
+			Key_generating();
+			quit = true;
+		}
+		else {
+			std::cout << "=== Sorry, but ->" << std::endl;
+		}
 	}
 }
 
 
 // Permutated Choice 1 from 64 to 56 bits
 std::string PC_1(std::string Str64bit, std::string Str56bit) {
-
 	int PC1_table[56] = { 56, 48, 40, 32, 24, 16, 8,
 						 0, 57, 49, 41, 33, 25, 17,
 						 9, 1, 58, 50, 42, 34, 26,
@@ -353,7 +352,6 @@ std::string PC_1(std::string Str64bit, std::string Str56bit) {
 						 6, 61, 53, 45, 37, 29, 21,
 						 13, 5, 60, 52, 44, 36, 28,
 						 20, 12, 4, 27, 19, 11, 3 };
-
 
 	for (int i = 0; i < 56; i++) {
 		Str56bit += Str64bit[PC1_table[i]];
@@ -365,7 +363,6 @@ std::string PC_1(std::string Str64bit, std::string Str56bit) {
 
 // Permutated Choice 2 from 56 to 48 bits
 std::string PC_2(std::string Str56bit, std::string Str48bit) {
-
 	int PC2_table[48] = {	13, 16, 10, 23, 0, 4,
 							2, 27, 14, 5, 20, 9,
 							22, 18, 11,	3, 25, 7,
@@ -374,8 +371,6 @@ std::string PC_2(std::string Str56bit, std::string Str48bit) {
 							29,	39,	50,	44,	32,	47,
 							43,	48,	38,	55,	33,	52,
 							45,	41,	49,	35,	28,	31 };
-
-
 
 	for (int i = 0; i < 48; i++) {
 		Str48bit += Str56bit[PC2_table[i]];
@@ -387,13 +382,11 @@ std::string PC_2(std::string Str56bit, std::string Str48bit) {
 
 // Divide key56bit on C-part and D-part
 void C_and_D_divider(std::string Str56bit) {
-
 	C28 = "";
 	D28 = "";
 
 	for (int i = 0; i < 56; i++) {
-		if (i < 28)
-		{
+		if (i < 28) {
 			C28 += Str56bit[i];
 		}
 		else {
@@ -405,19 +398,16 @@ void C_and_D_divider(std::string Str56bit) {
 
 // Left shift
 std::string LS(std::string StrToShift, int NumberOfKey) {
-
 	std::string str; // Temporary variable
 
 	if (NumberOfKey == 1 || NumberOfKey == 2 || NumberOfKey == 9 || NumberOfKey == 16) {
-		for (int i = 1; i < 28; i++)
-		{
+		for (int i = 1; i < 28; i++) {
 			str += StrToShift[i];
 		}
 		str += StrToShift[0];
 	}
 	else {
-		for (int i = 2; i < 28; i++)
-		{
+		for (int i = 2; i < 28; i++) {
 			str += StrToShift[i];
 		}
 		str += StrToShift[0];
@@ -429,7 +419,6 @@ std::string LS(std::string StrToShift, int NumberOfKey) {
 
 // Concatenate C-part and D-part
 std::string C_plus_D(std::string Cpart, std::string Dpart) {
-
 	key56bit = Cpart;
 	key56bit += Dpart;
 
@@ -439,26 +428,22 @@ std::string C_plus_D(std::string Cpart, std::string Dpart) {
 
 // Divides data from buffer (64 bits) on L and R parts
 void L_and_R_divider(std::string DataBuffer) {
-
 	L32 = "";
 	R32 = "";
 
 	for (int i = 0; i < 64; i++) {
-		if (i < 32)
-		{
+		if (i < 32)	{
 			L32 += DataBuffer[i];
 		}
 		else {
 			R32 += DataBuffer[i];
 		}
 	}
-
 }
 
 
 // Left and Right concatenation
 std::string L_plus_R() {
-
 	std::string str = L32;
 	str += R32;
 
@@ -468,7 +453,6 @@ std::string L_plus_R() {
 
 // Switching "Left" and "Right" parts
 void L_R_switching() {
-
 	std::string temp_string;
 
 	temp_string = R32;
@@ -480,7 +464,6 @@ void L_R_switching() {
 
 // Expansion Box
 void Expansion(std::string Right_32bit) {
-
 	int expansionTable[48] ={31, 0, 1, 2, 3, 4, 3, 4,
 							5, 6, 7, 8, 9, 8, 9, 10,
 							11, 12, 11, 12, 13, 14, 15, 16,
@@ -497,7 +480,6 @@ void Expansion(std::string Right_32bit) {
 
 // XOR of Right 48 bits and round key
 std::string XOR_48bits(std::string R_48bit, std::string Round_SubKey) {
-
 	std::string temp_string;
 
 	for (int i = 0; i < 48; i++) {
@@ -519,7 +501,6 @@ std::string XOR_48bits(std::string R_48bit, std::string Round_SubKey) {
 
 // XOR of Left 32 bits and output of F-function
 std::string XOR_32bits(std::string L_32bit, std::string F_output) {
-
 	std::string temp_string;
 
 	for (int i = 0; i < 32; i++) {
@@ -535,18 +516,15 @@ std::string XOR_32bits(std::string L_32bit, std::string F_output) {
 	L_32bit = "";
 	L_32bit = temp_string;
 
-
 	return L_32bit;
 }
 
 
 // Converting decimal to binary	
 std::string Dec_to_Bin(int decimal) {
-
 	std::string bin_output;
 
-	switch (decimal)
-	{
+	switch (decimal) {
 	case 0:
 		bin_output = "0000";
 		break;
@@ -606,7 +584,6 @@ std::string Dec_to_Bin(int decimal) {
 
 // S-box 
 std::string S_Box_function(std::string R_48bit) {
-
 	std::string R_32bit;	// output of its function
 
 	
@@ -666,7 +643,6 @@ std::string S_Box_function(std::string R_48bit) {
 			t_column += str_6_bit[i];
 		}
 
-		
 		// Convertion 6bit block data //
 		// converting t_column to binary and writing it to column variable
 		if (t_column == "0000") { column = 0; }
@@ -686,7 +662,6 @@ std::string S_Box_function(std::string R_48bit) {
 		if (t_column == "1110") { column = 14; }
 		if (t_column == "1111") { column = 15; }
 
-
 		if (t_row == "00") { row = 0; }
 		if (t_row == "01") { row = 1; }
 		if (t_row == "10") { row = 2; }
@@ -695,19 +670,16 @@ std::string S_Box_function(std::string R_48bit) {
 
 		R_32bit += Dec_to_Bin(s_box_table[Si][row][column]);
 
-
 		t_row = "";
 		t_column = "";
 		str_6_bit = "";
 	}
-
 	return R_32bit;
 }
 
 
 // Permutation of 32bit block data
 std::string Permutation(std::string str_32bit) {
-
 	std::string t_str;
 
 	int Permutation_table[32] = { 15, 6, 19, 20, 28, 11, 27, 16,
@@ -718,18 +690,15 @@ std::string Permutation(std::string str_32bit) {
 	for (int i = 0; i < 32; i++) {
 		t_str += str_32bit[Permutation_table[i]];
 	}
-
 	return t_str;
 }
 
 
 // Keyschedule
 void Key_Schedule() {
-
 	std::string HEX_OUT;
 	HEX_OUT = HEX2BIN(key); // Now key is in BIN
 	bin_key = HEX_OUT;
-
 
 	key56bit = PC_1(bin_key, key56bit);
 	
@@ -738,16 +707,13 @@ void Key_Schedule() {
 		C_and_D_divider(key56bit);
 
 		C28 = LS(C28, i);
-
 		D28 = LS(D28, i);
 
 		key56bit = C_plus_D(C28, D28);
-
 		subkeys[i-1] += PC_2(key56bit, key48bit);
 
 		key48bit = "";
 	}
-	
 }
 
 
@@ -762,16 +728,13 @@ long int FileSize(std::string filePath) {
 		length = file.tellg();
 		file.seekg(0, file.beg);
 	}
-
 	file.close();
-
 	return length;
 }
 
  
 // How many blocks will be
 void Block_Amount() {
-
 	if (size%64 == 0) {
 		completeBlockNum = size / 64;
 	}
@@ -782,7 +745,6 @@ void Block_Amount() {
 		else {
 			uncompleteBlockNum = 64 - size;
 		}
-		
 		uncompleteBlock_flag = true;
 		completeBlockNum = size / 64;
 	}
@@ -794,14 +756,11 @@ void Block_Amount() {
 
 // Reads data block by block (by 64 bits) Reading into var "buffer"
 void BlockReading() {
-	
 	if (file_end_flag != true) {
 		std::ifstream DataReading(path_Copy, std::ios::in | std::ios::binary);	// opening our file for reading
-
 		DataReading.seekg(position);
 
 		if (completeBlockNum == 0 && uncompleteBlock_flag == true) { // we reached last uncomplete block
-
 			DataReading.read(buffer, 64 - uncompleteBlockNum);	// Reads all data that lasts
 
 			// Filling with pattern = "11111111"
@@ -813,7 +772,9 @@ void BlockReading() {
 				buffer[(64 - uncompleteBlockNum) + i] = pattern[j];
 				j++;
 
-				if (j == 7) j = 0; // to contuinue pattering
+				if (j == 7){
+					j = 0; // to contuinue pattering
+				}
 			}
 		}
 
@@ -822,7 +783,6 @@ void BlockReading() {
 			DataReading.read(buffer, 64);
 			completeBlockNum--;
 		}
-
 		position += 64;
 
 		if (size <= position) {
@@ -835,7 +795,6 @@ void BlockReading() {
 
 // From char array to normal string
 std::string Buffer_to_string() {
-
 	data64 = "";
 
 	for (int i = 0; i < 64; i++) {
@@ -847,7 +806,6 @@ std::string Buffer_to_string() {
 
 // Initial Permutation
 std::string IP(std::string StrToIP){
-
 	std::string IpermutatedStr = "";
 
 	int IP_table[64] = { 57, 49, 41, 33, 25, 17, 9, 1,
@@ -862,13 +820,11 @@ std::string IP(std::string StrToIP){
 	for (int i = 0; i < 64; i++) {
 		IpermutatedStr += StrToIP[IP_table[i]];
 	}
-
 	return IpermutatedStr;
 }
 
 // Final Permutation
 std::string FP(std::string StrToFP) {
-
 	std::string FpermutatedStr = "";
 
 	int FP_table[64] = { 39, 7,	47,	15,	55,	23,	63,	31,
@@ -884,47 +840,37 @@ std::string FP(std::string StrToFP) {
 	for (int i = 0; i < 64; i++) {
 		FpermutatedStr += StrToFP[FP_table[i]];
 	}
-
 	return FpermutatedStr;
 }
 
 
 // Outputs encrypted 64 bit data block
 void Writing_Encrypted_64bit(std::string path, std::string data) {
-
 	std::ofstream File_output(path, std::ofstream::binary | std::ios_base::app); // Opening that file for writing
 	std::string writing_dat = "";
 
 	int times = data.length() / 8;
 
 
-	for (int i = 0; i < times; i++)
-	{
-		for (int j = 0; j < 8; j++)
-		{
+	for (int i = 0; i < times; i++)	{
+		for (int j = 0; j < 8; j++)	{
 			writing_dat += data[8 * i + j];
 		}
-		
-
 		File_output << static_cast<uint_fast8_t>(std::bitset<8>(writing_dat).to_ulong());
-
 		writing_dat = "";
 	}
-
 	File_output.close();
 }
 
 
 // F-function itself
 std::string F_function(std::string subkey, std::string Round_R32) {
-
 	Expansion(Round_R32);
 
 	std::string XORoutput;
 	XORoutput = XOR_48bits(Right_48bit, subkey);
 
 	std::string output;
-
 	output = Permutation(S_Box_function(XORoutput));
 
 	XORoutput = "";
@@ -935,7 +881,6 @@ std::string F_function(std::string subkey, std::string Round_R32) {
 
 
 std::string Check_for_pattern(std::string str_out_IP) {
-
 	int pattern = 0;
 	int for_delete = 0;
 	std::string output;
@@ -949,7 +894,6 @@ std::string Check_for_pattern(std::string str_out_IP) {
 			}
 
 			if (pattern == 8) {
-
 				for_delete++;
 				pattern = 0;
 			}
@@ -964,8 +908,7 @@ std::string Check_for_pattern(std::string str_out_IP) {
 			}
 		}
 	}
-	else
-	{
+	else {
 		output = str_out_IP;
 	}
 
@@ -979,17 +922,17 @@ std::string Check_for_pattern(std::string str_out_IP) {
 
 // Showing Progress in percents
 void Progress_Bar() {
-
 	int progr_bar = 30;
 	int one_filling_amount = 100 / progr_bar;
 
 	percentage += shift;
 	int filling = percentage / (100.0 / progr_bar);
 
-	if (std::round(percentage) == 100) { filling = progr_bar; }
+	if (std::round(percentage) == 100) {
+		filling = progr_bar;
+	}
 
 	if (percentage == 0 || 100/percentage >= 1) {
-
 		std::cout << "Progress: " << std::round(percentage) << "% [";
 		for (int i = 0; i < progr_bar; i++) {
 			if (filling != 0) {
@@ -1007,47 +950,41 @@ void Progress_Bar() {
 
 // Inputting all valuable data for next step
 void Hello() {
+	std::string answer;
+	boolean quit = false;
 
-	std::cout << "===== Encryption - [e] , decryption - [d] =====" << std::endl;
-	char answer;
-	std::cout << ">> ";
-	std::cin >> answer; // Get the answer
+	while(!quit) {
+		std::cout << "==== For encryption - [e], decryption - [d] ====" << std::endl;
+		std::cout << ">> ";
+		std::cin >> answer; // Get the answer
 
-	if (answer == 'e')
-	{
-		encryption_flag = 1;
-		Copy_in_BIN();
-		Key_Logic();
-	}
-	else if (answer == 'd')
-	{
-		decryption_flag = 1;
-		Copy_in_BIN();
-		Key_entering();
-
-
-	}
-	else if (answer == 'F')	// Easter egg (why not?)
-	{
-		std::cout << "========== Thanks, You paid respect! ==========" << std::endl;
-		Hello();
-	}
-	else
-	{
-		std::cout << "=== Sorry, but ->" << std::endl;
-		Hello();
+		if (answer == "e") {
+			encryption_flag = 1;
+			Copy_in_BIN();
+			Key_Logic();
+			quit = true;
+		}
+		else if (answer == "d")	{
+			decryption_flag = 1;
+			Copy_in_BIN();
+			Key_entering();
+			quit = true;
+		}
+		else if (answer == "F")	{	// Easter egg
+			std::cout << "========== Thanks, You paid respect! ==========" << std::endl;
+		}
+		else {
+			std::cout << "=== Sorry, but ->" << std::endl;
+		}
 	}
 }
 
 
 void Encryption() {
-
 	size = FileSize(path_Copy);
-	
 	Block_Amount();
 
 	while (file_end_flag != true) {
-		
 		BlockReading();
 
 		std::string t_str_out_IP = "";
@@ -1055,10 +992,7 @@ void Encryption() {
 		
 		L_and_R_divider(t_str_out_IP);
 
-
 		for (int round = 0; round < 16; round++) {
-
-
 			std::string XORoutput;
 			XORoutput = XOR_32bits(L32, F_function(subkeys[round], R32));
 			L32 = XORoutput;
@@ -1071,62 +1005,47 @@ void Encryption() {
 		std::string t_str_out_FP = "";
 		t_str_out_FP = FP(L_plus_R());
 
-
 		Writing_Encrypted_64bit(path_File_Save, t_str_out_FP);
 
 		Progress_Bar();
 	}
-	
-	
 }
 
 
 void Decryption() {
-
 	size = FileSize(path_Copy);
-
 	Block_Amount();
 
 	while (file_end_flag != true) {
-
 		BlockReading();
 
 		std::string t_str_out_IP = "";
 		t_str_out_IP = IP(Buffer_to_string());
-
-
+		
 		L_and_R_divider(t_str_out_IP);
 
-		for (int round = 0; round < 16; round++) {
-					   
+		for (int round = 0; round < 16; round++) {  
 			std::string XORoutput;
 			XORoutput = XOR_32bits(L32, F_function(subkeys[15 - round], R32));
 			L32 = XORoutput;
-
 			L_R_switching();
 		}
 
-		
 		L_R_switching();
 
 		std::string t_str_out_FP = "";
 		t_str_out_FP = FP(L_plus_R());
-
 		std::string output = Check_for_pattern(t_str_out_FP);
 
-
 		Writing_Encrypted_64bit(path_File_Save, output);
-
 		Progress_Bar();
 	}
-
 }
 
 
 //========================================================
 
 int main() {
-
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	// you can loop k higher to see more color choices
 	SetConsoleTextAttribute(hConsole, 10);
