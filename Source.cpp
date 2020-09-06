@@ -17,6 +17,10 @@
 //						Variables
 //========================================================
 
+bool shutDown_flag = false;
+
+bool copyCreated_flag = false;
+
 bool encryption_flag = 0;
 bool decryption_flag = 0;
 
@@ -141,7 +145,7 @@ std::string GetWorkingDir() {
 void Copy_in_BIN (){
 	boolean quit = false;
 
-	while(!quit) {
+	while(!quit && !shutDown_flag) {
 		std::cout << "== Please, enter path to file for processing ==" << std::endl;
 		std::cout << ">> ";
 		std::cin >> path_PlainText;
@@ -155,6 +159,7 @@ void Copy_in_BIN (){
 
 			std::ifstream Readfile(path_PlainText, std::ifstream::binary);
 			std::ofstream Copyfile(path_Copy, std::fstream::binary);
+			copyCreated_flag = true;
 
 			char c;
 			while (Readfile.get(c)) {
@@ -271,7 +276,7 @@ void Key_entering() {
 	boolean quit = false;
 	std::string tempKey;
 
-	while (!quit) {
+	while (!quit && !shutDown_flag) {
 		std::cout << "====== Enter your HEX (16 character) key ======" << std::endl;
 		std::cout << ">> ";
 		std::cin >> tempKey;
@@ -298,7 +303,7 @@ void Key_generating() {
 	std::string answer;
 	boolean quit = false;
 
-	while (!quit) {
+	while (!quit && !shutDown_flag) {
 		std::cout << "====== Generate a key? [y] - yes, [n] - no =====" << std::endl;
 		std::cout << ">> ";
 		std::cin >> answer; // Get the answer
@@ -325,7 +330,7 @@ void Key_Logic() {
 	std::string answer;	// Does user have a key
 	boolean quit = false;
 
-	while(!quit) {
+	while(!quit && !shutDown_flag) {
 		std::cout << "===== Do You have key? [y] - yes, [n] - no ====" << std::endl;
 		std::cout << ">> ";
 		std::cin >> answer; // Get the answer
@@ -956,7 +961,7 @@ void Hello() {
 	std::string answer;
 	boolean quit = false;
 
-	while(!quit) {
+	while(!quit && !shutDown_flag) {
 		std::cout << "==== For encryption - [e], decryption - [d] ====" << std::endl;
 		std::cout << ">> ";
 		std::cin >> answer; // Get the answer
@@ -1047,16 +1052,36 @@ void Decryption() {
 
 
 //========================================================
+// Signal handler
+void Signal_handler(int sig) {
+	if (copyCreated_flag) {
+		char char_array[255];
+		strcpy(char_array, path_Copy.c_str());
+		remove(char_array);
+	}
+	
+	shutDown_flag = true;
 
+	system("CLS");
+	std::cout << "============== Process terminated! ==============\n" << std::endl;
+
+	exit(0);
+}
 //========================================================
 
 
 int main() {
+	signal(SIGINT, Signal_handler);
+	signal(SIGTERM, Signal_handler);
+	#ifdef SIGBREAK
+		signal(SIGBREAK, Signal_handler);
+	#endif
+
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	// you can loop k higher to see more color choices
 	SetConsoleTextAttribute(hConsole, 10);
 
-	std::cout << "=================== Oh, hi! ===================" << std::endl;
+	std::cout << "=================== Oh, hi! ====================\n" << std::endl;
 
 	Hello();
 
