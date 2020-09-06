@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <windows.h>
+#include <signal.h>
 #include <iostream>
 #include <fstream>
 #include <cstdio>
@@ -14,7 +16,6 @@
 //========================================================
 //						Variables
 //========================================================
-
 
 bool encryption_flag = 0;
 bool decryption_flag = 0;
@@ -268,23 +269,25 @@ std::string HEX2BIN(std::string str) {
 // Asks for key
 void Key_entering() {
 	boolean quit = false;
+	std::string tempKey;
 
 	while (!quit) {
 		std::cout << "====== Enter your HEX (16 character) key ======" << std::endl;
 		std::cout << ">> ";
-		std::cin >> key;
+		std::cin >> tempKey;
 
-		if (key.length() != 16) {
+		if (tempKey.length() != 16) {
 			std::cout << "=== Sorry, but key must be 16 character ->" << std::endl;
 		}
-		if (Invalid_key(key)) {
+		else if (Invalid_key(tempKey)) {
 			std::cout << "=== Sorry, but you used invalid character(s) ->" << std::endl;
 		}
-		if (All_char_same(key)) {
+		else if (All_char_same(tempKey)) {
 			std::cout << "=== Sorry, but your key too weak ->" << std::endl;
 		}
 		else {
 			quit = true;
+			key = tempKey;
 		}
 	}	
 }
@@ -880,6 +883,7 @@ std::string F_function(std::string subkey, std::string Round_R32) {
 }
 
 
+// Checks for patterns
 std::string Check_for_pattern(std::string str_out_IP) {
 	int pattern = 0;
 	int for_delete = 0;
@@ -914,7 +918,6 @@ std::string Check_for_pattern(std::string str_out_IP) {
 
 	return output;
 }
-
 
 
 // ================= Main processing function =====================
@@ -1045,6 +1048,9 @@ void Decryption() {
 
 //========================================================
 
+//========================================================
+
+
 int main() {
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	// you can loop k higher to see more color choices
@@ -1078,7 +1084,6 @@ int main() {
 
 	std::cout << "==================== Done! ====================" << std::endl;
 	std::cout << std::endl;
-
 
 	system("pause");
 	return 0;
