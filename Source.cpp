@@ -16,10 +16,6 @@
 //						Variables
 //========================================================
 
-
-
-bool shutDown_flag = false;
-
 bool copyCreated_flag = false;
 bool outputCreated_flag = false;
 
@@ -107,6 +103,25 @@ bool All_char_same(std::string Key) {
 	return all_char_same_flag;
 }
 
+// Weak and half weak keys check
+bool Weak_key_check(std::string Key) {
+	bool weak_flag;
+
+	if (Key == "0101010101010101") { weak_flag = true; }
+	else if (Key == "FEFEFEFEFEFEFEFE") { weak_flag = true; }
+	else if (Key == "1F1F1F1F0E0E0E0E") { weak_flag = true; }
+	else if (Key == "E0E0E0E0F1F1F1F1") { weak_flag = true; }
+	else if (Key == "01FE01FE01FE01FE" || Key == "FE01FE01FE01FE01" ) { weak_flag = true; }
+	else if (Key == "1FE01FE01FE01FE0" || Key == "E0F1E0F1E0F1E0F1" ) { weak_flag = true; }
+	else if (Key == "01E001E001F101F1" || Key == "E001E001F101F101" ) { weak_flag = true; }
+	else if (Key == "1FFE1FFE0EFE0EFE" || Key == "FE1FFE1FFE0EFE0E" ) { weak_flag = true; }
+	else if (Key == "011F011F010E010E" || Key == "1F011F010E010E01" ) { weak_flag = true; }
+	else if (Key == "E0FEE0FEF1FEF1FE" || Key == "FEE0FEE0FEF1FEF1" ) { weak_flag = true; }
+	else { weak_flag = false; }
+
+	return weak_flag;
+}
+
 
 // If our asking file exists
 bool File_exist(std::string file_name) {
@@ -131,7 +146,7 @@ bool File_exist(std::string file_name) {
 void Where_to_save() {
 	boolean quit = false;
 
-	while (!quit && !shutDown_flag) {
+	while (!quit) {
 		std::cout << "===== Please, enter path where to save file ====" << std::endl;
 		std::cout << ">> ";
 		std::cin >> path_File_Save;
@@ -167,7 +182,7 @@ std::string GetWorkingDir() {
 void Copy_in_BIN (){
 	boolean quit = false;
 
-	while(!quit && !shutDown_flag) {
+	while(!quit) {
 		std::cout << "=== Please, enter path to file for processing ==" << std::endl;
 		std::cout << ">> ";
 		std::cin >> path_PlainText;
@@ -299,7 +314,7 @@ void Key_entering() {
 	boolean quit = false;
 	std::string tempKey;
 
-	while (!quit && !shutDown_flag) {
+	while (!quit) {
 		std::cout << "======= Enter your HEX (16 character) key ======" << std::endl;
 		std::cout << ">> ";
 		std::cin >> tempKey;
@@ -311,6 +326,9 @@ void Key_entering() {
 			std::cout << "=== Sorry, but you used invalid character(s) ->" << std::endl;
 		}
 		else if (All_char_same(tempKey)) {
+			std::cout << "=== Sorry, but your key too weak ->" << std::endl;
+		}
+		else if (Weak_key_check(tempKey)) {
 			std::cout << "=== Sorry, but your key too weak ->" << std::endl;
 		}
 		else {
@@ -326,7 +344,7 @@ void Key_generating() {
 	std::string answer;
 	boolean quit = false;
 
-	while (!quit && !shutDown_flag) {
+	while (!quit) {
 		std::cout << "====== Generate a key? [y] - yes, [n] - no =====" << std::endl;
 		std::cout << ">> ";
 		std::cin >> answer; // Get the answer
@@ -354,7 +372,7 @@ void Key_Logic() {
 	std::string answer;	// Does user have a key
 	boolean quit = false;
 
-	while(!quit && !shutDown_flag) {
+	while(!quit) {
 		std::cout << "===== Do You have key? [y] - yes, [n] - no =====" << std::endl;
 		std::cout << ">> ";
 		std::cin >> answer; // Get the answer
@@ -989,7 +1007,7 @@ void Hello() {
 	std::string answer;
 	boolean quit = false;
 
-	while(!quit && !shutDown_flag) {
+	while(!quit) {
 		std::cout << "==== For encryption - [e], decryption - [d] ====" << std::endl;
 		std::cout << ">> ";
 		std::cin >> answer; // Get the answer
@@ -1021,7 +1039,7 @@ void Encryption() {
 	size = FileSize(path_Copy);
 	Block_Amount();
 
-	while (file_end_flag != true && !shutDown_flag) {
+	while (file_end_flag != true) {
 		BlockReading();
 
 		std::string t_str_out_IP = "";
@@ -1053,7 +1071,7 @@ void Decryption() {
 	size = FileSize(path_Copy);
 	Block_Amount();
 
-	while (file_end_flag != true && !shutDown_flag) {
+	while (file_end_flag != true) {
 		BlockReading();
 
 		std::string t_str_out_IP = "";
@@ -1083,19 +1101,15 @@ void Decryption() {
 //========================================================
 // Signal handler
 void Signal_handler(int sig) {
-
-	shutDown_flag = true;
-
+	char nothing;
 	if (copyCreated_flag) {
 		std::remove(path_Copy.c_str());
 	}
 	else if (outputCreated_flag) {
 		std::remove(path_File_Save.c_str());
 	}
-	
 	system("CLS");
 	std::cout << "============== Process terminated! ==============\n" << std::endl;
-	
 	exit(0);
 }
 
