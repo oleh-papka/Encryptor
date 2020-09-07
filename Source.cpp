@@ -16,6 +16,8 @@
 //						Variables
 //========================================================
 
+bool shutDown_flag = false;
+
 bool copyCreated_flag = false;
 bool outputCreated_flag = false;
 
@@ -67,8 +69,6 @@ long int size; // Size of .bin file in bits
 
 double shift;
 double percentage;
-
-std::ofstream File_output;
 
 //========================================================
 //========================================================
@@ -898,9 +898,14 @@ std::string FP(std::string StrToFP) {
 // Outputs encrypted 64 bit data block
 void Writing_64bit(std::string path, std::string data) {
 	std::ofstream File_output(path, std::ofstream::binary | std::ios_base::app); // Opening that file for writing
-
 	outputCreated_flag = true;
 	
+	if (shutDown_flag) {
+		File_output.close();
+		std::remove(path_File_Save.c_str());
+		system("CLS");
+	}
+
 	std::string writing_dat = "";
 
 	int times = data.length() / 8;
@@ -909,9 +914,19 @@ void Writing_64bit(std::string path, std::string data) {
 	for (int i = 0; i < times; i++)	{
 		for (int j = 0; j < 8; j++)	{
 			writing_dat += data[8 * i + j];
+			if (shutDown_flag) {
+				File_output.close();
+				std::remove(path_File_Save.c_str());
+				system("CLS");
+			}
 		}
 		File_output << static_cast<uint_fast8_t>(std::bitset<8>(writing_dat).to_ulong());
 		writing_dat = "";
+		if (shutDown_flag) {
+			File_output.close();
+			std::remove(path_File_Save.c_str());
+			system("CLS");
+		}
 	}
 	File_output.close();
 }
@@ -1101,7 +1116,8 @@ void Decryption() {
 //========================================================
 // Signal handler
 void Signal_handler(int sig) {
-	char nothing;
+	shutDown_flag = true;
+
 	if (copyCreated_flag) {
 		std::remove(path_Copy.c_str());
 	}
@@ -1113,19 +1129,45 @@ void Signal_handler(int sig) {
 	exit(0);
 }
 
+
+
 //========================================================
 
-
 int main() {
+	//========================================================
+	//					Signal handlers
+	//========================================================
+
 	signal(SIGINT, Signal_handler);
 	signal(SIGTERM, Signal_handler);
+
 	#ifdef SIGBREAK
 		signal(SIGBREAK, Signal_handler);
 	#endif
 
+	//========================================================
+	//					Console decorations
+	//========================================================
+
+	#ifdef _WIN32
+			SetConsoleTitle(TEXT("Encryptor"));
+	#elif __linux__
+			std::cout << "\e]0;Encryptor\a\n";
+	#endif
+
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	// you can loop k higher to see more color choices
 	SetConsoleTextAttribute(hConsole, 10);
+
+	HWND console = GetConsoleWindow();
+	RECT ConsoleRect;
+	GetWindowRect(console, &ConsoleRect);
+	MoveWindow(console, ConsoleRect.left, ConsoleRect.top, 500, 300, TRUE);
+	SetWindowPos(console, 0, 500, 250, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+
+	
+	//========================================================
+	//					Actual program code
+	//========================================================
 
 	std::cout << "=================== Oh, hi! ====================\n" << std::endl;
 

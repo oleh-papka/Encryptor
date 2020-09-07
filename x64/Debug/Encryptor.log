@@ -1,3 +1,5 @@
 ﻿  Source.cpp
-D:\C++\Encryptor\Source.cpp(397,22): warning C4244: '=': conversion from 'std::streamoff' to 'long', possible loss of data
+D:\C++\Encryptor\Source.cpp(779,22): warning C4244: '=': conversion from 'std::streamoff' to 'long', possible loss of data
+D:\C++\Encryptor\Source.cpp(911,31): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\C++\Encryptor\Source.cpp(998,14): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
   Encryptor.vcxproj -> D:\C++\Encryptor\x64\Debug\Encryptor.exe
