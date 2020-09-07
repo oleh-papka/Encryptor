@@ -1,9 +1,8 @@
-#include <stdio.h>
+#include <cstdio>
 #include <windows.h>
 #include <signal.h>
 #include <iostream>
 #include <fstream>
-#include <cstdio>
 #include <Shlwapi.h>
 #include <string>
 #include <bitset>
@@ -17,9 +16,12 @@
 //						Variables
 //========================================================
 
+
+
 bool shutDown_flag = false;
 
 bool copyCreated_flag = false;
+bool outputCreated_flag = false;
 
 bool encryption_flag = 0;
 bool decryption_flag = 0;
@@ -70,6 +72,7 @@ long int size; // Size of .bin file in bits
 double shift;
 double percentage;
 
+std::ofstream File_output;
 
 //========================================================
 //========================================================
@@ -126,9 +129,28 @@ bool File_exist(std::string file_name) {
 
 // Asks where to save file
 void Where_to_save() {
-	std::cout << "==== Please, enter path where to save file ====" << std::endl;
-	std::cout << ">> ";
-	std::cin >> path_File_Save;
+	boolean quit = false;
+
+	while (!quit && !shutDown_flag) {
+		std::cout << "===== Please, enter path where to save file ====" << std::endl;
+		std::cout << ">> ";
+		std::cin >> path_File_Save;
+
+		if (path_File_Save == path_PlainText) {
+			system("CLS");
+			std::cout << "===== Sorry, but You cannot do this way ->" << std::endl;
+		}
+		else {
+			std::ifstream Exist_file(path_File_Save);
+			if (Exist_file) {
+				system("CLS");
+				std::cout << "===== Sorry, but You cannot do this way ->" << std::endl;
+			}
+			else {
+				quit = true;
+			}
+		}
+	}
 }
 
 
@@ -146,12 +168,13 @@ void Copy_in_BIN (){
 	boolean quit = false;
 
 	while(!quit && !shutDown_flag) {
-		std::cout << "== Please, enter path to file for processing ==" << std::endl;
+		std::cout << "=== Please, enter path to file for processing ==" << std::endl;
 		std::cout << ">> ";
 		std::cin >> path_PlainText;
 
 		if (!File_exist(path_PlainText)) {
-			std::cout << "===== Sorry, but there isn't such a file! =====" << std::endl;
+			system("CLS");
+			std::cout << "===== Sorry, but there isn't such a file ->" << std::endl;
 		}
 		else {
 			path_Copy = GetWorkingDir();
@@ -277,7 +300,7 @@ void Key_entering() {
 	std::string tempKey;
 
 	while (!quit && !shutDown_flag) {
-		std::cout << "====== Enter your HEX (16 character) key ======" << std::endl;
+		std::cout << "======= Enter your HEX (16 character) key ======" << std::endl;
 		std::cout << ">> ";
 		std::cin >> tempKey;
 
@@ -310,15 +333,16 @@ void Key_generating() {
 
 		if (answer == "y") {
 			Key_generator();
-			std::cout << "======= Your key is: [" << key << "] =======" << std::endl;
+			std::cout << "======= Your key is: [" << key << "] ========" << std::endl;
 			quit = true;
 		}
 		else if (answer == "n") {
 			Key_entering();
-			std::cout << "======= Your key is: [" << key << "] =======" << std::endl;
+			std::cout << "======= Your key is: [" << key << "] ========" << std::endl;
 			quit = true;
 		}
 		else {
+			system("CLS");
 			std::cout << "=== Sorry, but ->" << std::endl;
 		}
 	}	
@@ -331,7 +355,7 @@ void Key_Logic() {
 	boolean quit = false;
 
 	while(!quit && !shutDown_flag) {
-		std::cout << "===== Do You have key? [y] - yes, [n] - no ====" << std::endl;
+		std::cout << "===== Do You have key? [y] - yes, [n] - no =====" << std::endl;
 		std::cout << ">> ";
 		std::cin >> answer; // Get the answer
 
@@ -344,6 +368,7 @@ void Key_Logic() {
 			quit = true;
 		}
 		else {
+			system("CLS");
 			std::cout << "=== Sorry, but ->" << std::endl;
 		}
 	}
@@ -853,8 +878,11 @@ std::string FP(std::string StrToFP) {
 
 
 // Outputs encrypted 64 bit data block
-void Writing_Encrypted_64bit(std::string path, std::string data) {
+void Writing_64bit(std::string path, std::string data) {
 	std::ofstream File_output(path, std::ofstream::binary | std::ios_base::app); // Opening that file for writing
+
+	outputCreated_flag = true;
+	
 	std::string writing_dat = "";
 
 	int times = data.length() / 8;
@@ -941,7 +969,7 @@ void Progress_Bar() {
 	}
 
 	if (percentage == 0 || 100/percentage >= 1) {
-		std::cout << "Progress: " << std::round(percentage) << "% [";
+		std::cout << " Progress: " << std::round(percentage) << "% [";
 		for (int i = 0; i < progr_bar; i++) {
 			if (filling != 0) {
 				std::cout << "#";
@@ -982,6 +1010,7 @@ void Hello() {
 			std::cout << "========== Thanks, You paid respect! ==========" << std::endl;
 		}
 		else {
+			system("CLS");
 			std::cout << "=== Sorry, but ->" << std::endl;
 		}
 	}
@@ -992,7 +1021,7 @@ void Encryption() {
 	size = FileSize(path_Copy);
 	Block_Amount();
 
-	while (file_end_flag != true) {
+	while (file_end_flag != true && !shutDown_flag) {
 		BlockReading();
 
 		std::string t_str_out_IP = "";
@@ -1013,7 +1042,7 @@ void Encryption() {
 		std::string t_str_out_FP = "";
 		t_str_out_FP = FP(L_plus_R());
 
-		Writing_Encrypted_64bit(path_File_Save, t_str_out_FP);
+		Writing_64bit(path_File_Save, t_str_out_FP);
 
 		Progress_Bar();
 	}
@@ -1024,7 +1053,7 @@ void Decryption() {
 	size = FileSize(path_Copy);
 	Block_Amount();
 
-	while (file_end_flag != true) {
+	while (file_end_flag != true && !shutDown_flag) {
 		BlockReading();
 
 		std::string t_str_out_IP = "";
@@ -1045,7 +1074,7 @@ void Decryption() {
 		t_str_out_FP = FP(L_plus_R());
 		std::string output = Check_for_pattern(t_str_out_FP);
 
-		Writing_Encrypted_64bit(path_File_Save, output);
+		Writing_64bit(path_File_Save, output);
 		Progress_Bar();
 	}
 }
@@ -1054,19 +1083,22 @@ void Decryption() {
 //========================================================
 // Signal handler
 void Signal_handler(int sig) {
-	if (copyCreated_flag) {
-		char char_array[255];
-		strcpy(char_array, path_Copy.c_str());
-		remove(char_array);
-	}
-	
+
 	shutDown_flag = true;
 
+	if (copyCreated_flag) {
+		std::remove(path_Copy.c_str());
+	}
+	else if (outputCreated_flag) {
+		std::remove(path_File_Save.c_str());
+	}
+	
 	system("CLS");
 	std::cout << "============== Process terminated! ==============\n" << std::endl;
-
+	
 	exit(0);
 }
+
 //========================================================
 
 
@@ -1089,7 +1121,7 @@ int main() {
 
 	Key_Schedule();
 	
-	std::cout << "===== Hold on one moment, data processing =====" << std::endl;
+	std::cout << "====== Hold on one moment, data processing =====" << std::endl;
 	std::cout << std::endl;
 
 	if (decryption_flag == 1) {
@@ -1101,13 +1133,9 @@ int main() {
 		std::cout << std::endl;
 	}
 
-	// declaring character array 
-	char char_array[255];
-	// copying the contents of the string to char array 
-	strcpy(char_array, path_Copy.c_str());
-	remove(char_array);
+	std::remove(path_Copy.c_str());
 
-	std::cout << "==================== Done! ====================" << std::endl;
+	std::cout << "==================== Done! =====================" << std::endl;
 	std::cout << std::endl;
 
 	system("pause");
