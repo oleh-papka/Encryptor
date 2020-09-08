@@ -74,6 +74,39 @@ double percentage;
 //========================================================
 
 
+// Choose 3DES or DES
+bool Use_3DES() {
+	std::string answer;
+	bool quit = false;
+	bool logic_answer;
+
+	while (!quit) {
+		std::cout << "=========== Use DES or 3DES? [1 / 3] ===========" << std::endl;
+		std::cout << ">> ";
+		std::cin >> answer;
+
+		if (answer == "1") {
+			std::cout << "================= Ok, using DES ================" << std::endl;
+			logic_answer = false;
+			quit = true;
+		}
+		else if (answer == "3") {
+			std::cout << "================ Ok, using 3DES ================" << std::endl;
+			std::cout << "===================== Soon =====================" << std::endl;
+			logic_answer = true;
+			quit = true;
+		}
+		else {
+			system("CLS");
+			std::cout << "===== Sorry, but ->" << std::endl;
+		}
+	}
+
+	return logic_answer;
+}
+
+
+
 // Check if there is nothing else in our key
 bool Invalid_key(std::string Key) {
 	bool invalid_key_flag = false;
@@ -144,7 +177,7 @@ bool File_exist(std::string file_name) {
 
 // Asks where to save file
 void Where_to_save() {
-	boolean quit = false;
+	bool quit = false;
 
 	while (!quit) {
 		std::cout << "===== Please, enter path where to save file ====" << std::endl;
@@ -180,7 +213,7 @@ std::string GetWorkingDir() {
 
 // Creates a copy of the PlainText in Copy.txt file to process it
 void Copy_in_BIN (){
-	boolean quit = false;
+	bool quit = false;
 
 	while(!quit) {
 		std::cout << "=== Please, enter path to file for processing ==" << std::endl;
@@ -309,9 +342,38 @@ std::string HEX2BIN(std::string str) {
 }
 
 
+// Asks for a key
+void Key_entering_3DES() {
+	bool quit = false;
+	std::string tempKey;
+
+	while (!quit) {
+		std::cout << "======= Enter your HEX (48 character) key ======" << std::endl;
+		std::cout << ">> ";
+		std::cin >> tempKey;
+
+		if (tempKey.length() != 48) {
+			std::cout << "=== Sorry, but key must be 48 character ->" << std::endl;
+		}
+		else if (Invalid_key(tempKey)) {
+			std::cout << "=== Sorry, but you used invalid character(s) ->" << std::endl;
+		}
+		else if (All_char_same(tempKey)) {
+			std::cout << "=== Sorry, but your key too weak ->" << std::endl;
+		}
+		else {
+			quit = true;
+			key = tempKey;
+		}
+	}
+}
+
+
+
+
 // Asks for key
-void Key_entering() {
-	boolean quit = false;
+void Key_entering_DES() {
+	bool quit = false;
 	std::string tempKey;
 
 	while (!quit) {
@@ -342,7 +404,7 @@ void Key_entering() {
 // Should we generate a key for you if you dont have it
 void Key_generating() {
 	std::string answer;
-	boolean quit = false;
+	bool quit = false;
 
 	while (!quit) {
 		std::cout << "====== Generate a key? [y] - yes, [n] - no =====" << std::endl;
@@ -355,7 +417,7 @@ void Key_generating() {
 			quit = true;
 		}
 		else if (answer == "n") {
-			Key_entering();
+			Key_entering_DES();
 			std::cout << "======= Your key is: [" << key << "] ========" << std::endl;
 			quit = true;
 		}
@@ -370,7 +432,7 @@ void Key_generating() {
 // Asking for key and what to do
 void Key_Logic() {
 	std::string answer;	// Does user have a key
-	boolean quit = false;
+	bool quit = false;
 
 	while(!quit) {
 		std::cout << "===== Do You have key? [y] - yes, [n] - no =====" << std::endl;
@@ -378,7 +440,7 @@ void Key_Logic() {
 		std::cin >> answer; // Get the answer
 
 		if (answer == "y") {
-			Key_entering();
+			Key_entering_DES();
 			quit = true;
 		}
 		else if (answer == "n") {
@@ -874,6 +936,7 @@ std::string IP(std::string StrToIP){
 	return IpermutatedStr;
 }
 
+
 // Final Permutation
 std::string FP(std::string StrToFP) {
 	std::string FpermutatedStr = "";
@@ -1020,7 +1083,7 @@ void Progress_Bar() {
 // Inputting all valuable data for next step
 void Hello() {
 	std::string answer;
-	boolean quit = false;
+	bool quit = false;
 
 	while(!quit) {
 		std::cout << "==== For encryption - [e], decryption - [d] ====" << std::endl;
@@ -1036,7 +1099,7 @@ void Hello() {
 		else if (answer == "d")	{
 			decryption_flag = 1;
 			Copy_in_BIN();
-			Key_entering();
+			Key_entering_DES();
 			quit = true;
 		}
 		else if (answer == "F")	{	// Easter egg
@@ -1113,7 +1176,7 @@ void Decryption() {
 }
 
 
-//========================================================
+//============================================================
 // Signal handler
 void Signal_handler(int sig) {
 	shutDown_flag = true;
@@ -1131,7 +1194,7 @@ void Signal_handler(int sig) {
 
 
 
-//========================================================
+//============================================================
 
 int main() {
 	//========================================================
@@ -1171,6 +1234,8 @@ int main() {
 
 	std::cout << "=================== Oh, hi! ====================\n" << std::endl;
 
+	Use_3DES();
+
 	Hello();
 
 	Where_to_save();
@@ -1198,4 +1263,4 @@ int main() {
 	return 0;
 }
 
-//========================================================
+//============================================================
