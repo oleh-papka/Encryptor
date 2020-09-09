@@ -21,8 +21,9 @@ bool shutDown_flag = false;
 bool copyCreated_flag = false;
 bool outputCreated_flag = false;
 
-bool encryption_flag = 0;
 bool decryption_flag = 0;
+
+bool use3DES_flag = false;
 
 int position = 0;	// For block reading
 bool file_end_flag = 0; // To check if all file is read
@@ -41,8 +42,12 @@ std::string bin_key; // Main key in binary
 std::string key56bit; // After PC1 key in binary
 std::string key48bit; // After PC2 Sub key in binary
 
-std::string subkeys[16]; // All subkeys in one place
+std::string subkeys_DES[16]; // All subkeys in one place for DES
 
+// All subkeys in one place for 3DES
+std::string subkeys_3DES1[16];
+std::string subkeys_3DES2[16];
+std::string subkeys_3DES3[16]; 
 
 std::string C28; // "Left" part of key56bit
 std::string D28; // "Right" part of key56bit
@@ -72,6 +77,32 @@ double percentage;
 
 //========================================================
 //========================================================
+
+
+// Choose 3DES or DES
+bool Use_3DES() {
+	std::string answer;
+
+	while (true) {
+		std::cout << "=========== Use DES or 3DES? [1 / 3] ===========" << std::endl;
+		std::cout << ">> ";
+		std::cin >> answer;
+
+		if (answer == "1") {
+			std::cout << "================= Ok, using DES ================\n" << std::endl;
+			return false;
+		}
+		else if (answer == "3") {
+			use3DES_flag = true;
+			std::cout << "================ Ok, using 3DES ================\n" << std::endl;
+			return true;
+		}
+		else {
+			system("CLS");
+			std::cout << "===== Sorry, but ->" << std::endl;
+		}
+	}
+}
 
 
 // Check if there is nothing else in our key
@@ -144,10 +175,10 @@ bool File_exist(std::string file_name) {
 
 // Asks where to save file
 void Where_to_save() {
-	boolean quit = false;
+	bool quit = false;
 
 	while (!quit) {
-		std::cout << "===== Please, enter path where to save file ====" << std::endl;
+		std::cout << "\n===== Please, enter path where to save file ====" << std::endl;
 		std::cout << ">> ";
 		std::cin >> path_File_Save;
 
@@ -180,10 +211,10 @@ std::string GetWorkingDir() {
 
 // Creates a copy of the PlainText in Copy.txt file to process it
 void Copy_in_BIN (){
-	boolean quit = false;
+	bool quit = false;
 
 	while(!quit) {
-		std::cout << "=== Please, enter path to file for processing ==" << std::endl;
+		std::cout << "\n=== Please, enter path to file for processing ==" << std::endl;
 		std::cout << ">> ";
 		std::cin >> path_PlainText;
 
@@ -223,8 +254,15 @@ void Key_generator(){
 	std::mt19937 rng(dev());
 	std::uniform_int_distribution<std::mt19937::result_type> dist6(0, 15); // distribution in range [1, 16]
 
-	for (int i = 0; i < 16; i++) {
-		key += hex_numbers[dist6(rng)];
+	if (use3DES_flag) {
+		for (int i = 0; i < 48; i++) {
+			key += hex_numbers[dist6(rng)];
+		}
+	}
+	else {
+		for (int i = 0; i < 16; i++) {
+			key += hex_numbers[dist6(rng)];
+		}
 	}
 }
 
@@ -309,13 +347,40 @@ std::string HEX2BIN(std::string str) {
 }
 
 
-// Asks for key
-void Key_entering() {
-	boolean quit = false;
+// Asks for a key
+void Key_entering_3DES() {
+	bool quit = false;
 	std::string tempKey;
 
 	while (!quit) {
-		std::cout << "======= Enter your HEX (16 character) key ======" << std::endl;
+		std::cout << "\n======= Enter your HEX (48 character) key ======" << std::endl;
+		std::cout << ">> ";
+		std::cin >> tempKey;
+
+		if (tempKey.length() != 48) {
+			std::cout << "=== Sorry, but key must be 48 character ->" << std::endl;
+		}
+		else if (Invalid_key(tempKey)) {
+			std::cout << "=== Sorry, but you used invalid character(s) ->" << std::endl;
+		}
+		else if (All_char_same(tempKey)) {
+			std::cout << "=== Sorry, but your key too weak ->" << std::endl;
+		}
+		else {
+			quit = true;
+			key = tempKey;
+		}
+	}
+}
+
+
+// Asks for key
+void Key_entering_DES() {
+	bool quit = false;
+	std::string tempKey;
+
+	while (!quit) {
+		std::cout << "\n======= Enter your HEX (16 character) key ======" << std::endl;
 		std::cout << ">> ";
 		std::cin >> tempKey;
 
@@ -340,12 +405,12 @@ void Key_entering() {
 
 
 // Should we generate a key for you if you dont have it
-void Key_generating() {
+void Key_generating_DES() {
 	std::string answer;
-	boolean quit = false;
+	bool quit = false;
 
 	while (!quit) {
-		std::cout << "====== Generate a key? [y] - yes, [n] - no =====" << std::endl;
+		std::cout << "\n====== Generate a key? [y] - yes, [n] - no =====" << std::endl;
 		std::cout << ">> ";
 		std::cin >> answer; // Get the answer
 
@@ -355,7 +420,7 @@ void Key_generating() {
 			quit = true;
 		}
 		else if (answer == "n") {
-			Key_entering();
+			Key_entering_DES();
 			std::cout << "======= Your key is: [" << key << "] ========" << std::endl;
 			quit = true;
 		}
@@ -367,23 +432,63 @@ void Key_generating() {
 }
 
 
-// Asking for key and what to do
-void Key_Logic() {
-	std::string answer;	// Does user have a key
-	boolean quit = false;
+// Should we generate a key for you if you dont have it
+void Key_gentering_3DES() {
+	std::string answer;
+	bool quit = false;
 
-	while(!quit) {
-		std::cout << "===== Do You have key? [y] - yes, [n] - no =====" << std::endl;
+	while (!quit) {
+		std::cout << "\n====== Generate a key? [y] - yes, [n] - no =====" << std::endl;
 		std::cout << ">> ";
 		std::cin >> answer; // Get the answer
 
 		if (answer == "y") {
-			Key_entering();
+			Key_generator();
+			std::cout << "======= Your key is: [" << key << "] ========" << std::endl;
 			quit = true;
 		}
 		else if (answer == "n") {
-			Key_generating();
+			Key_entering_3DES();
+			std::cout << "======= Your key is: [" << key << "] ========" << std::endl;
 			quit = true;
+		}
+		else {
+			system("CLS");
+			std::cout << "=== Sorry, but ->" << std::endl;
+		}
+	}
+}
+
+
+// Asking for key and what to do
+void Key_Logic() {
+	std::string answer;	// Does user have a key
+	bool quit = false;
+
+	while(!quit) {
+		std::cout << "\n===== Do You have key? [y] - yes, [n] - no =====" << std::endl;
+		std::cout << ">> ";
+		std::cin >> answer; // Get the answer
+
+		if (answer == "y") {
+			if (use3DES_flag) {
+				Key_entering_3DES();
+				quit = true;
+			}
+			else {
+				Key_entering_DES();
+				quit = true;
+			}
+		}
+		else if (answer == "n") {
+			if (use3DES_flag) {
+				Key_gentering_3DES();
+				quit = true;
+			}
+			else {
+				Key_generating_DES();
+				quit = true;
+			}
 		}
 		else {
 			system("CLS");
@@ -747,23 +852,109 @@ std::string Permutation(std::string str_32bit) {
 
 // Keyschedule
 void Key_Schedule() {
-	std::string HEX_OUT;
-	HEX_OUT = HEX2BIN(key); // Now key is in BIN
-	bin_key = HEX_OUT;
+	if (use3DES_flag){
 
-	key56bit = PC_1(bin_key, key56bit);
-	
-	for (int i = 1; i <= 16; i++)
-	{
-		C_and_D_divider(key56bit);
+		std::string key_part1;
+		std::string key_part2;
+		std::string key_part3;
 
-		C28 = LS(C28, i);
-		D28 = LS(D28, i);
+		std::string bin_key1;
+		std::string bin_key2;
+		std::string bin_key3;
 
-		key56bit = C_plus_D(C28, D28);
-		subkeys[i-1] += PC_2(key56bit, key48bit);
 
-		key48bit = "";
+
+		for (int i = 0; i < 16; i++) {
+			key_part1 += key[i];
+		}
+		for (int i = 16; i < 32; i++) {
+			key_part1 += key[i];
+		}
+		for (int i = 32; i < 47; i++) {
+			key_part1 += key[i];
+		}
+				
+
+		for (int i = 0; i < 16; i++) {
+			bin_key1 += HEX2BIN(key_part1);
+		}
+		for (int i = 0; i < 16; i++) {
+			bin_key2 += HEX2BIN(key_part2);
+		}
+		for (int i = 0; i < 16; i++) {
+			bin_key3 += HEX2BIN(key_part3);
+		}
+
+		
+
+		//Creating subkeys1
+		key56bit = PC_1(bin_key1, key56bit);
+
+		for (int i = 0; i < 16; i++)
+		{
+			C_and_D_divider(key56bit);
+
+			C28 = LS(C28, i);
+			D28 = LS(D28, i);
+
+			key56bit = C_plus_D(C28, D28);
+			subkeys_3DES1[i] += PC_2(key56bit, key48bit);
+
+			key48bit = "";
+		}
+
+
+		//Creating subkeys2
+		key56bit = PC_1(bin_key2, key56bit);
+
+		for (int i = 0; i < 16; i++)
+		{
+			C_and_D_divider(key56bit);
+
+			C28 = LS(C28, i);
+			D28 = LS(D28, i);
+
+			key56bit = C_plus_D(C28, D28);
+			subkeys_3DES2[i] += PC_2(key56bit, key48bit);
+
+			key48bit = "";
+		}
+
+
+		//Creating subkeys3
+		key56bit = PC_1(bin_key3, key56bit);
+
+		for (int i = 0; i < 16; i++)
+		{
+			C_and_D_divider(key56bit);
+
+			C28 = LS(C28, i);
+			D28 = LS(D28, i);
+
+			key56bit = C_plus_D(C28, D28);
+			subkeys_3DES3[i] += PC_2(key56bit, key48bit);
+
+			key48bit = "";
+		}
+	}
+	else{
+		std::string HEX_OUT;
+		HEX_OUT = HEX2BIN(key); // Now key is in BIN
+		
+		key56bit = PC_1(bin_key, key56bit);
+		
+		for (int i = 1; i <= 16; i++)
+		{
+			C_and_D_divider(key56bit);
+
+			C28 = LS(C28, i);
+			D28 = LS(D28, i);
+
+			key56bit = C_plus_D(C28, D28);
+			subkeys_DES[i-1] += PC_2(key56bit, key48bit);
+
+			key48bit = "";
+		}
 	}
 }
 
@@ -873,6 +1064,7 @@ std::string IP(std::string StrToIP){
 	}
 	return IpermutatedStr;
 }
+
 
 // Final Permutation
 std::string FP(std::string StrToFP) {
@@ -1020,7 +1212,7 @@ void Progress_Bar() {
 // Inputting all valuable data for next step
 void Hello() {
 	std::string answer;
-	boolean quit = false;
+	bool quit = false;
 
 	while(!quit) {
 		std::cout << "==== For encryption - [e], decryption - [d] ====" << std::endl;
@@ -1028,7 +1220,6 @@ void Hello() {
 		std::cin >> answer; // Get the answer
 
 		if (answer == "e") {
-			encryption_flag = 1;
 			Copy_in_BIN();
 			Key_Logic();
 			quit = true;
@@ -1036,7 +1227,14 @@ void Hello() {
 		else if (answer == "d")	{
 			decryption_flag = 1;
 			Copy_in_BIN();
-			Key_entering();
+
+			if (use3DES_flag) {
+				Key_entering_3DES();
+			}
+			else {
+				Key_entering_DES();
+			}
+			
 			quit = true;
 		}
 		else if (answer == "F")	{	// Easter egg
@@ -1050,7 +1248,7 @@ void Hello() {
 }
 
 
-void Encryption() {
+void Encryption_DES() {
 	size = FileSize(path_Copy);
 	Block_Amount();
 
@@ -1064,7 +1262,7 @@ void Encryption() {
 
 		for (int round = 0; round < 16; round++) {
 			std::string XORoutput;
-			XORoutput = XOR_32bits(L32, F_function(subkeys[round], R32));
+			XORoutput = XOR_32bits(L32, F_function(subkeys_DES[round], R32));
 			L32 = XORoutput;
 
 			L_R_switching();
@@ -1082,7 +1280,7 @@ void Encryption() {
 }
 
 
-void Decryption() {
+void Decryption_DES() {
 	size = FileSize(path_Copy);
 	Block_Amount();
 
@@ -1096,7 +1294,7 @@ void Decryption() {
 
 		for (int round = 0; round < 16; round++) {  
 			std::string XORoutput;
-			XORoutput = XOR_32bits(L32, F_function(subkeys[15 - round], R32));
+			XORoutput = XOR_32bits(L32, F_function(subkeys_DES[15 - round], R32));
 			L32 = XORoutput;
 			L_R_switching();
 		}
@@ -1113,7 +1311,111 @@ void Decryption() {
 }
 
 
-//========================================================
+
+void Encryption_3DES() {
+	size = FileSize(path_Copy);
+	Block_Amount();
+
+	while (file_end_flag != true) {
+		BlockReading();
+
+		std::string t_str_out_IP = "";
+		t_str_out_IP = IP(Buffer_to_string());
+
+		L_and_R_divider(t_str_out_IP);
+
+
+		for (int round = 0; round < 16; round++) {
+			std::string XORoutput;
+			XORoutput = XOR_32bits(L32, F_function(subkeys_3DES1[round], R32));
+			L32 = XORoutput;
+
+			L_R_switching();
+		}
+		L_R_switching();
+
+
+		for (int round = 0; round < 16; round++) {
+			std::string XORoutput;
+			XORoutput = XOR_32bits(L32, F_function(subkeys_3DES2[15 - round], R32));
+			L32 = XORoutput;
+			L_R_switching();
+		}
+		L_R_switching();
+
+
+		for (int round = 0; round < 16; round++) {
+			std::string XORoutput;
+			XORoutput = XOR_32bits(L32, F_function(subkeys_3DES3[round], R32));
+			L32 = XORoutput;
+
+			L_R_switching();
+		}
+		L_R_switching();
+
+
+		std::string t_str_out_FP = "";
+		t_str_out_FP = FP(L_plus_R());
+		
+		Writing_64bit(path_File_Save, t_str_out_FP);
+
+		Progress_Bar();
+	}
+}
+
+
+void Decryption_3DES() {
+	size = FileSize(path_Copy);
+	Block_Amount();
+
+	while (file_end_flag != true) {
+		BlockReading();
+
+		std::string t_str_out_IP = "";
+		t_str_out_IP = IP(Buffer_to_string());
+
+		L_and_R_divider(t_str_out_IP);
+
+
+		for (int round = 0; round < 16; round++) {
+			std::string XORoutput;
+			XORoutput = XOR_32bits(L32, F_function(subkeys_3DES3[15 - round], R32));
+			L32 = XORoutput;
+			L_R_switching();
+		}
+		L_R_switching();
+
+
+		for (int round = 0; round < 16; round++) {
+			std::string XORoutput;
+			XORoutput = XOR_32bits(L32, F_function(subkeys_3DES2[round], R32));
+			L32 = XORoutput;
+			L_R_switching();
+		}
+		L_R_switching();
+
+
+		for (int round = 0; round < 16; round++) {
+			std::string XORoutput;
+			XORoutput = XOR_32bits(L32, F_function(subkeys_3DES1[15 - round], R32));
+			L32 = XORoutput;
+			L_R_switching();
+		}
+		L_R_switching();
+
+
+		std::string t_str_out_FP = "";
+		t_str_out_FP = FP(L_plus_R());
+		std::string output = Check_for_pattern(t_str_out_FP);
+
+		Writing_64bit(path_File_Save, output);
+		Progress_Bar();
+	}
+}
+
+
+
+//============================================================
 // Signal handler
 void Signal_handler(int sig) {
 	shutDown_flag = true;
@@ -1131,13 +1433,13 @@ void Signal_handler(int sig) {
 
 
 
-//========================================================
+//============================================================
 
 int main() {
 	//========================================================
 	//					Signal handlers
 	//========================================================
-
+	
 	signal(SIGINT, Signal_handler);
 	signal(SIGTERM, Signal_handler);
 
@@ -1171,6 +1473,8 @@ int main() {
 
 	std::cout << "=================== Oh, hi! ====================\n" << std::endl;
 
+	Use_3DES();
+
 	Hello();
 
 	Where_to_save();
@@ -1180,14 +1484,28 @@ int main() {
 	std::cout << "====== Hold on one moment, data processing =====" << std::endl;
 	std::cout << std::endl;
 
-	if (decryption_flag == 1) {
-		Decryption();
-		std::cout << std::endl;
+
+	if (use3DES_flag) {
+		if (decryption_flag == 1) {
+			Decryption_3DES();
+			std::cout << std::endl;
+		}
+		else {
+			Encryption_3DES();
+			std::cout << std::endl;
+		}
 	}
 	else {
-		Encryption();
-		std::cout << std::endl;
+		if (decryption_flag == 1) {
+			Decryption_DES();
+			std::cout << std::endl;
+		}
+		else {
+			Encryption_DES();
+			std::cout << std::endl;
+		}
 	}
+
 
 	std::remove(path_Copy.c_str());
 
@@ -1198,4 +1516,4 @@ int main() {
 	return 0;
 }
 
-//========================================================
+//============================================================
