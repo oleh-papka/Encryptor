@@ -1,4 +1,4 @@
-# Encryptor 1.0 
+# Encryptor v0.1.0 
 
 ## This is simple program for data encryption
 :warning: For encryption and decryption used DES algorithm and electronic codebook (ECB) mode
