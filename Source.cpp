@@ -75,6 +75,12 @@ long int size; // Size of .bin file in bits
 double shift;
 double percentage;
 
+
+std::string key_part1;
+std::string key_part2;
+std::string key_part3;
+
+
 //========================================================
 //========================================================
 
@@ -134,8 +140,9 @@ bool All_char_same(std::string Key) {
 	return all_char_same_flag;
 }
 
+
 // Weak and half weak keys check
-bool Weak_key_check(std::string Key) {
+bool Weak_key_check_DES(std::string Key) {
 	bool weak_flag;
 
 	if (Key == "0101010101010101") { weak_flag = true; }
@@ -148,8 +155,30 @@ bool Weak_key_check(std::string Key) {
 	else if (Key == "1FFE1FFE0EFE0EFE" || Key == "FE1FFE1FFE0EFE0E" ) { weak_flag = true; }
 	else if (Key == "011F011F010E010E" || Key == "1F011F010E010E01" ) { weak_flag = true; }
 	else if (Key == "E0FEE0FEF1FEF1FE" || Key == "FEE0FEE0FEF1FEF1" ) { weak_flag = true; }
+	else if (All_char_same(Key)) { weak_flag = true; }
 	else { weak_flag = false; }
 
+	return weak_flag;
+}
+
+
+// Weak and half weak keys check 3DES
+bool Weak_key_check_3DES() {
+	bool weak_flag;
+
+	if (Weak_key_check_DES(key_part1)) {
+		weak_flag = true;
+	}
+	else if (Weak_key_check_DES(key_part2)) {
+		weak_flag = true;
+	}
+	else if (Weak_key_check_DES(key_part3)) {
+		weak_flag = true;
+	}
+	else {
+		weak_flag = false;
+	}
+	
 	return weak_flag;
 }
 
@@ -357,14 +386,34 @@ void Key_entering_3DES() {
 		std::cout << ">> ";
 		std::cin >> tempKey;
 
+		for (int i = 0; i < 16; i++) {
+			key_part1 += tempKey[i];
+		}
+		for (int i = 16; i < 32; i++) {
+			key_part2 += tempKey[i];
+		}
+		for (int i = 32; i < 47; i++) {
+			key_part3 += tempKey[i];
+		}
+		
+
 		if (tempKey.length() != 48) {
 			std::cout << "=== Sorry, but key must be 48 character ->" << std::endl;
+			key_part1 = "";
+			key_part2 = "";
+			key_part3 = "";
 		}
 		else if (Invalid_key(tempKey)) {
 			std::cout << "=== Sorry, but you used invalid character(s) ->" << std::endl;
+			key_part1 = "";
+			key_part2 = "";
+			key_part3 = "";
 		}
-		else if (All_char_same(tempKey)) {
+		else if (Weak_key_check_3DES()) {
 			std::cout << "=== Sorry, but your key too weak ->" << std::endl;
+			key_part1 = "";
+			key_part2 = "";
+			key_part3 = "";
 		}
 		else {
 			quit = true;
@@ -390,10 +439,7 @@ void Key_entering_DES() {
 		else if (Invalid_key(tempKey)) {
 			std::cout << "=== Sorry, but you used invalid character(s) ->" << std::endl;
 		}
-		else if (All_char_same(tempKey)) {
-			std::cout << "=== Sorry, but your key too weak ->" << std::endl;
-		}
-		else if (Weak_key_check(tempKey)) {
+		else if (Weak_key_check_DES(tempKey)) {
 			std::cout << "=== Sorry, but your key too weak ->" << std::endl;
 		}
 		else {
@@ -444,6 +490,17 @@ void Key_gentering_3DES() {
 
 		if (answer == "y") {
 			Key_generator();
+
+			for (int i = 0; i < 16; i++) {
+				key_part1 += key[i];
+			}
+			for (int i = 16; i < 32; i++) {
+				key_part2 += key[i];
+			}
+			for (int i = 32; i < 47; i++) {
+				key_part3 += key[i];
+			}
+
 			std::cout << "======= Your key is: [" << key << "] ========" << std::endl;
 			quit = true;
 		}
@@ -853,40 +910,16 @@ std::string Permutation(std::string str_32bit) {
 // Keyschedule
 void Key_Schedule() {
 	if (use3DES_flag){
-
-		std::string key_part1;
-		std::string key_part2;
-		std::string key_part3;
-
+		
 		std::string bin_key1;
 		std::string bin_key2;
-		std::string bin_key3;
+		std::string bin_key3;	
 
-
-
-		for (int i = 0; i < 16; i++) {
-			key_part1 += key[i];
-		}
-		for (int i = 16; i < 32; i++) {
-			key_part1 += key[i];
-		}
-		for (int i = 32; i < 47; i++) {
-			key_part1 += key[i];
-		}
-				
-
-		for (int i = 0; i < 16; i++) {
-			bin_key1 += HEX2BIN(key_part1);
-		}
-		for (int i = 0; i < 16; i++) {
-			bin_key2 += HEX2BIN(key_part2);
-		}
-		for (int i = 0; i < 16; i++) {
-			bin_key3 += HEX2BIN(key_part3);
-		}
+		bin_key1 = HEX2BIN(key_part1);
+		bin_key2 = HEX2BIN(key_part2);
+		bin_key3 = HEX2BIN(key_part3);
 
 		
-
 		//Creating subkeys1
 		key56bit = PC_1(bin_key1, key56bit);
 
@@ -937,11 +970,8 @@ void Key_Schedule() {
 			key48bit = "";
 		}
 	}
-	else{
-		std::string HEX_OUT;
-		HEX_OUT = HEX2BIN(key); // Now key is in BIN
-		
-		key56bit = PC_1(bin_key, key56bit);
+	else{		
+		key56bit = PC_1(HEX2BIN(key), key56bit);
 		
 		for (int i = 1; i <= 16; i++)
 		{
@@ -1311,7 +1341,6 @@ void Decryption_DES() {
 }
 
 
-
 void Encryption_3DES() {
 	size = FileSize(path_Copy);
 	Block_Amount();
@@ -1416,6 +1445,7 @@ void Decryption_3DES() {
 
 
 //============================================================
+
 // Signal handler
 void Signal_handler(int sig) {
 	shutDown_flag = true;
@@ -1430,8 +1460,6 @@ void Signal_handler(int sig) {
 	std::cout << "============== Process terminated! ==============\n" << std::endl;
 	exit(0);
 }
-
-
 
 //============================================================
 
