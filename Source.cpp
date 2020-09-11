@@ -25,6 +25,9 @@ bool decryption_flag = 0;
 
 bool use3DES_flag = false;
 
+bool useCBC_flag = false;
+std::string IV64; // Initialization vector
+
 int position = 0;	// For block reading
 bool file_end_flag = 0; // To check if all file is read
 
@@ -86,7 +89,7 @@ std::string key_part3;
 
 
 // Choose 3DES or DES
-bool Use_3DES() {
+void Use_3DES() {
 	std::string answer;
 
 	while (true) {
@@ -96,18 +99,98 @@ bool Use_3DES() {
 
 		if (answer == "1") {
 			std::cout << "================= Ok, using DES ================\n" << std::endl;
-			return false;
+			break;
 		}
 		else if (answer == "3") {
 			use3DES_flag = true;
 			std::cout << "================ Ok, using 3DES ================\n" << std::endl;
-			return true;
+			break;
 		}
 		else {
 			system("CLS");
 			std::cout << "===== Sorry, but ->" << std::endl;
 		}
 	}
+}
+
+
+// Random key generator (Generates 64-bit HEX key)
+void IV_generator() {
+	char hex_numbers[] = "01";	// all numbers of hex base system to make HEX key
+
+	std::random_device dev;
+	std::mt19937 rng(dev());
+	std::uniform_int_distribution<std::mt19937::result_type> dist6(0, 1);
+
+	for (int i = 0; i < 64; i++) {
+		IV64 += hex_numbers[dist6(rng)];
+	}
+
+	std::cout << "=== Your IV is: [" << IV64 << "] ===" << std::endl;
+}
+
+
+// Enter IV
+void Enter_IV() {
+	std::string temp_IV;
+
+	while (true) {
+		std::cout << "============ Enter your IV ===========" << std::endl;
+		std::cout << ">> ";
+		std::cin >> temp_IV;
+
+		if (temp_IV.length() != 64) {
+			std::cout << "=== Sorry, but IV must be 64 character ->" << std::endl;
+			break;
+		}
+		else {
+			IV64 = temp_IV;
+			break;
+		}
+	}
+}
+
+
+// Choose CBC or EBC
+void Use_CBC() {
+	std::string answer;
+
+	while (true) {
+		std::cout << "============ Use CBC or EBC? [C / E] ===========" << std::endl;
+		std::cout << ">> ";
+		std::cin >> answer;
+
+		if (answer == "C") {
+			useCBC_flag = true;
+			std::cout << "================= Ok, using CBC ================\n" << std::endl;	
+			break;
+		}
+		else if (answer == "E") {
+			std::cout << "================ Ok, using EBC ================\n" << std::endl;
+			break;
+		}
+		else {
+			system("CLS");
+			std::cout << "===== Sorry, but ->" << std::endl;
+		}
+	}
+}
+
+
+// XOR of IV 64bits
+std::string XOR_IV64bits(std::string Text, std::string IV) {
+	std::string temp_string;
+
+	for (int i = 0; i < 64; i++) {
+		if (Text[i] == IV[i]) {
+			temp_string += '0';
+		}
+		else {
+			temp_string += '1';
+		}
+	}
+	
+	return temp_string;
 }
 
 
@@ -1286,9 +1369,16 @@ void Encryption_DES() {
 		BlockReading();
 
 		std::string t_str_out_IP = "";
-		t_str_out_IP = IP(Buffer_to_string());
+
+		if (useCBC_flag) {
+			t_str_out_IP = IP(XOR_IV64bits(Buffer_to_string(), IV64));
+		}
+		else {
+			t_str_out_IP = IP(Buffer_to_string());
+		}
 		
 		L_and_R_divider(t_str_out_IP);
+
 
 		for (int round = 0; round < 16; round++) {
 			std::string XORoutput;
@@ -1302,6 +1392,8 @@ void Encryption_DES() {
 		
 		std::string t_str_out_FP = "";
 		t_str_out_FP = FP(L_plus_R());
+
+		IV64 = t_str_out_FP;
 
 		Writing_64bit(path_File_Save, t_str_out_FP);
 
@@ -1333,8 +1425,17 @@ void Decryption_DES() {
 
 		std::string t_str_out_FP = "";
 		t_str_out_FP = FP(L_plus_R());
-		std::string output = Check_for_pattern(t_str_out_FP);
 
+
+		std::string output;
+		if (useCBC_flag) {
+			output = Check_for_pattern(XOR_IV64bits(t_str_out_FP, IV64));
+			IV64 = Buffer_to_string();
+		}
+		else {
+			output = Check_for_pattern(t_str_out_FP);
+		}
+				
 		Writing_64bit(path_File_Save, output);
 		Progress_Bar();
 	}
@@ -1349,11 +1450,16 @@ void Encryption_3DES() {
 		BlockReading();
 
 		std::string t_str_out_IP = "";
-		t_str_out_IP = IP(Buffer_to_string());
 
+		if (useCBC_flag) {
+			t_str_out_IP = IP(XOR_IV64bits(Buffer_to_string(), IV64));
+		}
+		else {
+			t_str_out_IP = IP(Buffer_to_string());
+		}
+		
 		L_and_R_divider(t_str_out_IP);
-
-
+		
 		for (int round = 0; round < 16; round++) {
 			std::string XORoutput;
 			XORoutput = XOR_32bits(L32, F_function(subkeys_3DES1[round], R32));
@@ -1385,6 +1491,8 @@ void Encryption_3DES() {
 
 		std::string t_str_out_FP = "";
 		t_str_out_FP = FP(L_plus_R());
+
+		IV64 = t_str_out_FP;
 		
 		Writing_64bit(path_File_Save, t_str_out_FP);
 
@@ -1435,7 +1543,16 @@ void Decryption_3DES() {
 
 		std::string t_str_out_FP = "";
 		t_str_out_FP = FP(L_plus_R());
-		std::string output = Check_for_pattern(t_str_out_FP);
+
+
+		std::string output;
+		if (useCBC_flag) {
+			output = Check_for_pattern(XOR_IV64bits(t_str_out_FP, IV64));
+			IV64 = Buffer_to_string();
+		}
+		else {
+			output = Check_for_pattern(t_str_out_FP);
+		}
 
 		Writing_64bit(path_File_Save, output);
 		Progress_Bar();
@@ -1501,6 +1618,8 @@ int main() {
 
 	std::cout << "=================== Oh, hi! ====================\n" << std::endl;
 
+	Use_CBC();
+
 	Use_3DES();
 
 	Hello();
@@ -1512,9 +1631,15 @@ int main() {
 	std::cout << "====== Hold on one moment, data processing =====" << std::endl;
 	std::cout << std::endl;
 
+	if (decryption_flag && useCBC_flag) {
+		Enter_IV();
+	}
+	else if (useCBC_flag) {
+		IV_generator();
+	}
 
 	if (use3DES_flag) {
-		if (decryption_flag == 1) {
+		if (decryption_flag == true) {
 			Decryption_3DES();
 			std::cout << std::endl;
 		}
@@ -1524,7 +1649,7 @@ int main() {
 		}
 	}
 	else {
-		if (decryption_flag == 1) {
+		if (decryption_flag == true) {
 			Decryption_DES();
 			std::cout << std::endl;
 		}
