@@ -3,8 +3,6 @@
 ## This is simple program for data encryption
 :warning: For encryption and decryption used DES algorithm or 3DES and ECB, CBC modes
 
-Program in development...
-
 ### How it works:
 1. User chooses what to do (encryption or decryption)
 1. User chooses mode
